@@ -1,0 +1,7 @@
+{
+  "name": "Minerate",
+  "description": "Professional geological topographic mapping tool. Capture coordinates, angles, distances, and photos locally with offline support and AI assistance.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
