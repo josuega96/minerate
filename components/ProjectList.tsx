@@ -59,7 +59,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => {
           <div>
             <label className="block text-sm font-semibold text-stone-600 mb-1">Nombre del Proyecto</label>
             <input 
-              className="w-full border border-stone-300 rounded-lg p-3 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full bg-white border border-stone-300 rounded-lg p-3 text-stone-800 font-bold focus:ring-emerald-500 focus:border-emerald-500"
               placeholder="Ej. Galería Nivel 340"
               value={newProject.name}
               onChange={e => setNewProject({...newProject, name: e.target.value})}
@@ -69,7 +69,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => {
           <div>
             <label className="block text-sm font-semibold text-stone-600 mb-1">Operador / Geólogo</label>
             <input 
-              className="w-full border border-stone-300 rounded-lg p-3 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full bg-white border border-stone-300 rounded-lg p-3 text-stone-800 font-bold focus:ring-emerald-500 focus:border-emerald-500"
               placeholder="Nombre"
               value={newProject.operator}
               onChange={e => setNewProject({...newProject, operator: e.target.value})}
@@ -79,7 +79,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => {
           <div>
             <label className="block text-sm font-semibold text-stone-600 mb-1">Tipo de Labor</label>
             <select 
-              className="w-full border border-stone-300 rounded-lg p-3 bg-white focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full border border-stone-300 rounded-lg p-3 bg-white text-stone-800 font-bold focus:ring-emerald-500 focus:border-emerald-500"
               value={newProject.type}
               onChange={e => setNewProject({...newProject, type: e.target.value as any})}
             >

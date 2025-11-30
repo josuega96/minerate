@@ -7,67 +7,90 @@ export interface Project {
   shift?: string;
   method: 'compass_tape';
   createdAt: number;
+  synced?: boolean;
+  updatedAt?: number;
+}
+
+export interface Subproject {
+  id?: number;
+  projectId: number;
+  name: string;
+  createdAt: number;
+  synced?: boolean;
+  updatedAt?: number;
 }
 
 export interface Station {
   id?: number;
   projectId: number;
-  name: string; // e.g., "E-1", "E-2"
+  subprojectId?: number; // New: Link to a specific gallery/sector
+  name: string;
   easting: number;
   northing: number;
   elevation: number;
-  isOrigin: boolean; // True if manually entered, False if calculated
+  isOrigin: boolean;
   notes?: string;
   createdAt: number;
+  synced?: boolean;
+  updatedAt?: number;
 }
 
 export interface Segment {
   id?: number;
   projectId: number;
-  fromStationId: number; // ID of Station
-  toStationId: number;   // ID of Station
+  subprojectId?: number; // New
+  fromStationId: number;
+  toStationId: number;
   
   // Measurements
-  azimuth: number;       // 0-360
-  dip: number;          // -90 to 90 (0 is horizontal)
-  distance: number;      // Slant distance
+  azimuth: number;
+  dip: string | number;
+  distance: number;
   
-  // Dimensions at the Destination Station (Profile)
+  // Dimensions
   left: number;
   right: number;
   up?: number;
   down?: number;
   
   notes?: string;
+  synced?: boolean;
+  updatedAt?: number;
 }
 
 export interface IntermediatePoint {
   id?: number;
   projectId: number;
-  segmentId?: number; // Linked to the segment (traverse leg)
-  distanceFromStart: number; // Distance recorded on tape from Origin
+  subprojectId?: number; // New
+  segmentId?: number;
+  distanceFromStart: number;
   left?: number;
   right?: number;
   up?: number;
   down?: number;
   notes?: string;
+  synced?: boolean;
+  updatedAt?: number;
 }
 
 export interface Structure {
   id?: number;
   projectId: number;
-  stationId: number; // Linked to the station where it was observed (From Station)
-  distanceFromStart?: number; // Distance from the station along the tape
-  type: 'falla' | 'veta' | 'estrato' | 'fractura' | 'contacto';
-  strike: number; // Rumbo
-  dip: number;    // Buzamiento
+  subprojectId?: number; // New
+  stationId: number;
+  distanceFromStart?: number;
+  type: 'falla' | 'veta' | 'estrato' | 'fractura' | 'contacto' | 'otros';
+  strike: number;
+  dip: string | number;
+  location?: string[];
   aperture?: number;
   fill?: string;
   notes?: string;
   photoUrl?: string;
+  synced?: boolean;
+  updatedAt?: number;
 }
 
-// Keeping legacy type for compatibility if needed
 export interface GeoPoint {
   id?: number;
   timestamp: number;

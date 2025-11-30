@@ -1,17 +1,28 @@
+
 import React, { useState, useEffect } from 'react';
 import { Project, Station, Segment, Structure, IntermediatePoint } from '../types';
-import { ArrowRight, Save, X, Compass, Ruler, Calculator, AlertTriangle, Plus, Trash2, List, Layers } from 'lucide-react';
+import { ArrowRight, Save, X, Compass, Ruler, Calculator, AlertTriangle, Plus, Trash2, List, Layers, Pencil, BoxSelect } from 'lucide-react';
 import { InputGroup } from './InputGroup';
 
 interface FormsProps {
   type: 'station_origin' | 'advance';
   project: Project;
   baseStation?: Station; 
+  initialData?: {
+    station: Station;
+    segment?: Segment;
+    intermediates: IntermediatePoint[];
+    structures: Structure[];
+    baseStation?: Station;
+  };
   onSaveStation: (station: Station, segment: Segment | null, intermediates?: IntermediatePoint[], structures?: Structure[]) => Promise<void>;
+  onUpdateStation?: (stationId: number, station: Partial<Station>, segmentId: number | undefined, segment: Partial<Segment> | null, intermediates: IntermediatePoint[], structures: Structure[]) => Promise<void>;
   onCancel: () => void;
 }
 
-const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation, onCancel }) => {
+const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, onSaveStation, onUpdateStation, onCancel }) => {
+  const isEditing = !!initialData;
+
   // --- STATE FOR ORIGIN ---
   const [originData, setOriginData] = useState({
     name: 'E-1',
@@ -25,7 +36,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
   const [advanceData, setAdvanceData] = useState({
     nextName: '', // Auto-calculated usually
     azimuth: '',
-    dip: '0',
+    dip: '0', // Stored as string to allow "45 NE" or "+5"
     distance: '',
     left: '1.5',
     right: '1.5',
@@ -47,28 +58,61 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
 
   // --- STATE FOR STRUCTURES (Inside Advance) ---
   const [structures, setStructures] = useState<Structure[]>([]);
+  
+  // Split Dip State for UI
+  const [structDipAngle, setStructDipAngle] = useState('');
+  const [structDipDir, setStructDipDir] = useState('NE');
+  // Location State for UI
+  const [structLocation, setStructLocation] = useState<string[]>([]);
+
   const [tempStructure, setTempStructure] = useState<Partial<Structure>>({
     type: 'veta',
     strike: undefined,
-    dip: undefined,
     aperture: undefined,
     distanceFromStart: undefined,
     notes: ''
   });
 
-  // Auto-name next station
+  // Initialize Data for Editing
   useEffect(() => {
-    if (baseStation && type === 'advance') {
-      const match = baseStation.name.match(/(\d+)$/);
-      if (match) {
-        const nextNum = parseInt(match[1]) + 1;
-        const prefix = baseStation.name.replace(/\d+$/, '');
-        setAdvanceData(prev => ({ ...prev, nextName: `${prefix}${nextNum}` }));
-      } else {
-        setAdvanceData(prev => ({ ...prev, nextName: `${baseStation.name}-Sig` }));
+    if (initialData) {
+      if (type === 'station_origin') {
+        setOriginData({
+          name: initialData.station.name,
+          easting: initialData.station.easting.toString(),
+          northing: initialData.station.northing.toString(),
+          elevation: initialData.station.elevation.toString(),
+          notes: initialData.station.notes || ''
+        });
+      } else if (type === 'advance' && initialData.segment) {
+        setAdvanceData({
+          nextName: initialData.station.name,
+          azimuth: initialData.segment.azimuth.toString(),
+          dip: initialData.segment.dip.toString(),
+          distance: initialData.segment.distance.toString(),
+          left: initialData.segment.left.toString(),
+          right: initialData.segment.right.toString(),
+          up: (initialData.segment.up || 0).toString(),
+          down: (initialData.segment.down || 0).toString(),
+          notes: initialData.station.notes || ''
+        });
+        setIntermediates(initialData.intermediates);
+        setStructures(initialData.structures);
+      }
+    } else {
+      // Auto-name next station only if NOT editing
+      if (baseStation && type === 'advance') {
+        const match = baseStation.name.match(/(\d+)$/);
+        if (match) {
+          const nextNum = parseInt(match[1]) + 1;
+          const prefix = baseStation.name.replace(/\d+$/, '');
+          setAdvanceData(prev => ({ ...prev, nextName: `${prefix}${nextNum}` }));
+        } else {
+          setAdvanceData(prev => ({ ...prev, nextName: `${baseStation.name}-Sig` }));
+        }
       }
     }
-  }, [baseStation, type]);
+  }, [baseStation, type, initialData]);
 
   const handleAddIntermediate = () => {
     if (!tempIntermediate.dist) return;
@@ -92,21 +136,39 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
     setIntermediates(newList);
   };
 
+  const toggleStructLocation = (loc: string) => {
+    if (structLocation.includes(loc)) {
+      setStructLocation(structLocation.filter(l => l !== loc));
+    } else {
+      setStructLocation([...structLocation, loc]);
+    }
+  };
+
   const handleAddStructure = () => {
-    if (!baseStation) return;
+    // In edit mode, we use the original baseStation logic or the initialData context, 
+    // but the ID link is handled in DB update.
+    if (!baseStation && !isEditing) return;
+
+    // Combine Angle and Direction
+    const combinedDip = structDipAngle ? `${structDipAngle}° ${structDipDir}` : '';
+
     const newStructure: Structure = {
       projectId: project.id!,
-      stationId: baseStation.id!, // Temporary, validated on save
+      stationId: 0, // Placeholder, resolved in DB
       distanceFromStart: tempStructure.distanceFromStart || 0,
       type: tempStructure.type as any,
       strike: tempStructure.strike || 0,
-      dip: tempStructure.dip || 0,
+      dip: combinedDip, 
+      location: structLocation,
       aperture: tempStructure.aperture,
       notes: tempStructure.notes
     };
 
     setStructures([...structures, newStructure]);
-    setTempStructure({ type: 'veta', strike: undefined, dip: undefined, aperture: undefined, distanceFromStart: undefined, notes: '' });
+    setTempStructure({ type: 'veta', strike: undefined, aperture: undefined, distanceFromStart: undefined, notes: '' });
+    setStructDipAngle('');
+    setStructDipDir('NE');
+    setStructLocation([]);
   };
 
   const removeStructure = (index: number) => {
@@ -119,26 +181,37 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
     e.preventDefault();
 
     if (type === 'station_origin') {
-      const station: Station = {
+      const stationData: Partial<Station> = {
         projectId: project.id!,
         name: originData.name,
         easting: parseFloat(originData.easting),
         northing: parseFloat(originData.northing),
         elevation: parseFloat(originData.elevation),
         isOrigin: true,
-        notes: originData.notes,
-        createdAt: Date.now()
+        notes: originData.notes
       };
-      await onSaveStation(station, null);
+
+      if (isEditing && onUpdateStation && initialData) {
+        await onUpdateStation(initialData.station.id!, stationData, undefined, null, [], []);
+      } else {
+        await onSaveStation(stationData as Station, null);
+      }
     } 
-    else if (type === 'advance' && baseStation) {
+    else if (type === 'advance' && (baseStation || isEditing)) {
       // CALCULATE COORDINATES
+      const sourceStation = isEditing && initialData?.baseStation ? initialData.baseStation : baseStation;
+
+      if (!sourceStation) {
+        alert("Error: No se encontró la estación base para el cálculo.");
+        return; 
+      }
+
       const dist = parseFloat(advanceData.distance);
       const az = parseFloat(advanceData.azimuth);
-      const dip = parseFloat(advanceData.dip);
+      const dipNumeric = parseFloat(advanceData.dip) || 0;
       
       const radAz = az * (Math.PI / 180);
-      const radDip = dip * (Math.PI / 180);
+      const radDip = dipNumeric * (Math.PI / 180);
 
       const hDist = dist * Math.cos(radDip);
       const vDist = dist * Math.sin(radDip);
@@ -146,23 +219,21 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
       const dE = hDist * Math.sin(radAz);
       const dN = hDist * Math.cos(radAz);
 
-      const newStation: Station = {
+      const stationData: Partial<Station> = {
         projectId: project.id!,
         name: advanceData.nextName,
-        easting: baseStation.easting + dE,
-        northing: baseStation.northing + dN,
-        elevation: baseStation.elevation + vDist,
+        easting: sourceStation.easting + dE,
+        northing: sourceStation.northing + dN,
+        elevation: sourceStation.elevation + vDist,
         isOrigin: false,
-        notes: advanceData.notes,
-        createdAt: Date.now()
+        notes: advanceData.notes
       };
 
-      const newSegment: Segment = {
+      const segmentData: Partial<Segment> = {
         projectId: project.id!,
-        fromStationId: baseStation.id!,
-        toStationId: 0, // Placeholder, filled by DB helper
+        fromStationId: sourceStation.id!,
         azimuth: az,
-        dip: dip,
+        dip: advanceData.dip,
         distance: dist,
         left: parseFloat(advanceData.left),
         right: parseFloat(advanceData.right),
@@ -170,17 +241,29 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
         down: parseFloat(advanceData.down)
       };
 
-      await onSaveStation(newStation, newSegment, intermediates, structures);
+      if (isEditing && onUpdateStation && initialData) {
+        await onUpdateStation(
+            initialData.station.id!, 
+            stationData, 
+            initialData.segment?.id, 
+            segmentData, 
+            intermediates, 
+            structures
+        );
+      } else {
+        await onSaveStation(stationData as Station, segmentData as Segment, intermediates, structures);
+      }
     }
   };
 
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-stone-200 flex justify-between items-center bg-stone-50">
-        <h2 className="font-bold text-lg text-stone-800">
-          {type === 'station_origin' && "Definir Punto de Inicio"}
-          {type === 'advance' && "Registrar Avance"}
+      <div className={`p-4 border-b border-stone-200 flex justify-between items-center ${isEditing ? 'bg-amber-50' : 'bg-stone-50'}`}>
+        <h2 className="font-bold text-lg text-stone-800 flex items-center gap-2">
+          {isEditing && <Pencil className="w-5 h-5 text-amber-600" />}
+          {type === 'station_origin' && (isEditing ? "Editar Punto de Inicio" : "Definir Punto de Inicio")}
+          {type === 'advance' && (isEditing ? "Editar Registro de Avance" : "Registrar Avance")}
         </h2>
         <button onClick={onCancel} className="bg-stone-200 p-2 rounded-full hover:bg-stone-300">
           <X className="w-5 h-5 text-stone-600" />
@@ -200,25 +283,32 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
             </div>
             <div className="pt-2">
               <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Notas</label>
-              <textarea className="w-full border border-stone-300 rounded-lg p-3 focus:ring-emerald-500 focus:border-emerald-500" rows={3} value={originData.notes} onChange={e => setOriginData({...originData, notes: e.target.value})} />
+              <textarea 
+                className="w-full bg-white border border-stone-300 rounded-lg p-3 text-emerald-900 font-medium focus:ring-emerald-500 focus:border-emerald-500" 
+                rows={3} 
+                value={originData.notes} 
+                onChange={e => setOriginData({...originData, notes: e.target.value})} 
+              />
             </div>
           </div>
         )}
 
         {/* ADVANCE FORM */}
-        {type === 'advance' && baseStation && (
+        {type === 'advance' && (
           <div className="space-y-6">
             {/* Header: From -> To */}
-            <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+            <div className={`flex items-center gap-4 p-4 rounded-xl border ${isEditing ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-100'}`}>
               <div className="text-center">
-                <div className="text-xs text-emerald-500 font-bold uppercase">Desde</div>
-                <div className="font-bold text-xl text-emerald-700">{baseStation.name}</div>
+                <div className={`text-xs font-bold uppercase ${isEditing ? 'text-amber-500' : 'text-emerald-500'}`}>Desde</div>
+                <div className={`font-bold text-xl ${isEditing ? 'text-amber-700' : 'text-emerald-700'}`}>
+                  {isEditing && initialData?.baseStation ? initialData.baseStation.name : baseStation?.name}
+                </div>
               </div>
-              <ArrowRight className="text-emerald-300" />
+              <ArrowRight className={isEditing ? 'text-amber-300' : 'text-emerald-300'} />
               <div className="flex-1">
-                <label className="block text-xs text-emerald-500 font-bold uppercase mb-1">Hacia (Nuevo)</label>
+                <label className={`block text-xs font-bold uppercase mb-1 ${isEditing ? 'text-amber-500' : 'text-emerald-500'}`}>Hacia (Destino)</label>
                 <input 
-                  className="w-full bg-white border border-emerald-200 rounded-lg px-2 py-1 font-bold text-lg text-emerald-700 focus:ring-emerald-500 focus:border-emerald-500"
+                  className={`w-full bg-white border rounded-lg px-2 py-1 font-bold text-lg focus:ring-2 ${isEditing ? 'border-amber-200 text-amber-700 focus:ring-amber-500 focus:border-amber-500' : 'border-emerald-200 text-emerald-700 focus:ring-emerald-500 focus:border-emerald-500'}`}
                   value={advanceData.nextName}
                   onChange={e => setAdvanceData({...advanceData, nextName: e.target.value})}
                   required
@@ -236,7 +326,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                   <InputGroup label="Azimut / Rumbo" name="azimuth" type="number" value={advanceData.azimuth} onChange={e => setAdvanceData({...advanceData, azimuth: e.target.value})} required placeholder="0-360°" />
                 </div>
                 <div className="col-span-1">
-                  <InputGroup label="Buzamiento" name="dip" type="number" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="+/- Grados" />
+                  <InputGroup label="Buzamiento (+1, -1, 45 NE)" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="+/-, NE/SW" />
                 </div>
               </div>
             </div>
@@ -255,7 +345,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Dist.</label>
                       <input 
                         type="number" step="0.1" 
-                        className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.dist} 
                         onChange={e => setTempIntermediate({...tempIntermediate, dist: e.target.value})} 
                         placeholder="m" 
@@ -265,7 +355,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Izq</label>
                       <input 
                         type="number" step="0.1" 
-                        className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.left} 
                         onChange={e => setTempIntermediate({...tempIntermediate, left: e.target.value})} 
                         placeholder="L" 
@@ -275,7 +365,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Der</label>
                       <input 
                         type="number" step="0.1" 
-                        className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.right} 
                         onChange={e => setTempIntermediate({...tempIntermediate, right: e.target.value})} 
                         placeholder="R" 
@@ -285,7 +375,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Techo</label>
                       <input 
                         type="number" step="0.1" 
-                        className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.up} 
                         onChange={e => setTempIntermediate({...tempIntermediate, up: e.target.value})} 
                         placeholder="T" 
@@ -295,7 +385,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Piso</label>
                       <input 
                         type="number" step="0.1" 
-                        className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.down} 
                         onChange={e => setTempIntermediate({...tempIntermediate, down: e.target.value})} 
                         placeholder="P" 
@@ -306,7 +396,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                  <div className="flex gap-2">
                     <input 
                       type="text" 
-                      className="flex-1 p-2 border border-stone-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500"
+                      className="flex-1 p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-medium focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Descripción / Nota..."
                       value={tempIntermediate.notes}
                       onChange={e => setTempIntermediate({...tempIntermediate, notes: e.target.value})}
@@ -369,7 +459,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                  <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
                        <select 
-                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500"
                         value={tempStructure.type}
                         onChange={e => setTempStructure({...tempStructure, type: e.target.value as any})}
                       >
@@ -378,24 +468,67 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                         <option value="fractura">Fractura</option>
                         <option value="estrato">Estrato</option>
                         <option value="contacto">Contacto</option>
+                        <option value="otros">Otros</option>
                       </select>
                     </div>
                     <div>
-                      <input type="number" className="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
+                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
                     </div>
                     <div>
-                      <input type="number" className="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Buzamiento" value={tempStructure.dip === undefined ? '' : tempStructure.dip} onChange={e => setTempStructure({...tempStructure, dip: parseFloat(e.target.value)})} />
+                      {/* Split Dip Input: Angle + Direction */}
+                      <div className="flex gap-1 h-full">
+                         <input 
+                           type="number" 
+                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
+                           placeholder="Ang" 
+                           value={structDipAngle} 
+                           onChange={e => setStructDipAngle(e.target.value)} 
+                         />
+                         <select 
+                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                           value={structDipDir}
+                           onChange={e => setStructDipDir(e.target.value)}
+                         >
+                           <option value="NE">NE</option>
+                           <option value="SE">SE</option>
+                           <option value="SW">SW</option>
+                           <option value="NW">NW</option>
+                         </select>
+                      </div>
                     </div>
                     <div>
-                      <input type="number" className="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
+                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
                     </div>
                      <div>
-                      <input type="number" className="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
+                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
                     </div>
+
+                    {/* New Location Selector */}
+                    <div className="col-span-2 flex flex-wrap gap-2 py-1">
+                      {['left', 'right', 'up', 'down'].map((loc) => {
+                         const isActive = structLocation.includes(loc);
+                         const labels: Record<string, string> = { left: 'Izq', right: 'Der', up: 'Techo', down: 'Piso' };
+                         return (
+                           <button
+                             key={loc}
+                             type="button"
+                             onClick={() => toggleStructLocation(loc)}
+                             className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-colors ${
+                               isActive 
+                                ? 'bg-amber-500 text-white border-amber-600' 
+                                : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'
+                             }`}
+                           >
+                             {labels[loc]}
+                           </button>
+                         )
+                      })}
+                    </div>
+
                     <div className="col-span-2">
                        <input 
                         type="text" 
-                        className="w-full p-2 border border-amber-200 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500" 
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
                         placeholder="Notas / Observaciones de la estructura..." 
                         value={tempStructure.notes || ''} 
                         onChange={e => setTempStructure({...tempStructure, notes: e.target.value})} 
@@ -416,21 +549,29 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                   <table className="w-full text-xs text-left">
                     <thead className="bg-amber-50 text-amber-700 font-semibold">
                       <tr>
-                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Tipo/Ubic</th>
                         <th className="p-2">Datos</th>
                         <th className="p-2">Nota</th>
                         <th className="p-2 text-right"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-amber-50">
-                      {structures.map((st, idx) => (
+                      {structures.map((st, idx) => {
+                        const locLabels: Record<string, string> = { left: 'I', right: 'D', up: 'T', down: 'P' };
+                        const locString = st.location?.map(l => locLabels[l]).join(',') || '-';
+                        return (
                         <tr key={idx}>
                           <td className="p-2 font-bold uppercase text-xs text-amber-900">
-                            {st.type}
-                            <div className="text-[10px] font-normal text-amber-700">Dist: {st.distanceFromStart}m</div>
+                            <div>{st.type}</div>
+                            <div className="text-[10px] font-normal text-amber-700 flex gap-1">
+                              <span>Dist: {st.distanceFromStart}m</span>
+                              {st.location && st.location.length > 0 && (
+                                <span className="bg-amber-100 px-1 rounded text-amber-800 font-bold">{locString}</span>
+                              )}
+                            </div>
                           </td>
                           <td className="p-2 text-amber-900">
-                            <div>R: {st.strike}° / B: {st.dip}°</div>
+                            <div>R: {st.strike}° / B: {st.dip}</div>
                             {st.aperture && <div className="text-[10px] text-amber-700">Pot: {st.aperture}m</div>}
                           </td>
                           <td className="p-2 text-amber-700 italic truncate max-w-[100px]">{st.notes}</td>
@@ -440,7 +581,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                 </div>
@@ -469,12 +610,12 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, onSaveStation
       </form>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-stone-200 bg-white absolute bottom-0 w-full z-10">
+      <div className="p-4 border-t border-stone-200 bg-white absolute bottom-0 w-full z-10 safe-area-bottom">
         <button 
           onClick={handleSubmit}
-          className="w-full bg-emerald-700 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 active:bg-emerald-800 shadow-lg shadow-emerald-100 hover:bg-emerald-800"
+          className={`w-full text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-colors ${isEditing ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' : 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-100'}`}
         >
-          <Save className="w-5 h-5" /> Guardar Datos
+          {isEditing ? <><Save className="w-5 h-5" /> Actualizar Datos</> : <><Save className="w-5 h-5" /> Guardar Datos</>}
         </button>
       </div>
     </div>
