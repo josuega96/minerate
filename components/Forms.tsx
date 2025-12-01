@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Project, Station, Segment, Structure, IntermediatePoint } from '../types';
 import { ArrowRight, Save, X, Compass, Ruler, Calculator, AlertTriangle, Plus, Trash2, List, Layers, Pencil, BoxSelect } from 'lucide-react';
@@ -319,8 +320,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
             </div>
 
             {/* Section 1: Compass Readings */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+            <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
                 <Compass className="w-4 h-4 text-slate-500" /> Lecturas Brújula
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -452,8 +453,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
             </div>
 
             {/* Section 3: Structures (NEW) */}
-            <div className="space-y-4 bg-amber-50 p-4 rounded-xl border border-amber-200">
-              <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wide flex items-center gap-2">
+            <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-300 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
                 <Layers className="w-4 h-4" /> Estructuras Geológicas
               </h3>
               
@@ -461,7 +462,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
                        <select 
-                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500"
                         value={tempStructure.type}
                         onChange={e => setTempStructure({...tempStructure, type: e.target.value as any})}
                       >
@@ -478,7 +479,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
                       <input
                         type="text"
-                        className="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500 placeholder-amber-400"
+                        className="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500 placeholder-slate-400"
                         placeholder="Nombre / Detalle (Ej. Falla Principal)"
                         value={tempStructure.otherType || ''}
                         onChange={e => setTempStructure({...tempStructure, otherType: e.target.value})}
@@ -486,7 +487,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     </div>
 
                     <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
                     </div>
                     <div>
                       {/* Split Dip Input: Angle + Direction */}
@@ -494,13 +495,13 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                          <input 
                            type="number"
                            step="any"
-                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
-                           placeholder="Az" 
+                           className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500 min-w-0" 
+                           placeholder="Buz" 
                            value={structDipAngle} 
                            onChange={e => setStructDipAngle(e.target.value)} 
                          />
                          <select 
-                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                           className="w-16 p-0 px-1 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500"
                            value={structDipDir}
                            onChange={e => setStructDipDir(e.target.value)}
                          >
@@ -512,10 +513,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                       </div>
                     </div>
                     <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
                     </div>
                      <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
                     </div>
 
                     {/* New Location Selector */}
@@ -530,8 +531,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                              onClick={() => toggleStructLocation(loc)}
                              className={`px-3 py-1.5 rounded-md text-xs font-bold border transition-colors ${
                                isActive 
-                                ? 'bg-amber-500 text-white border-amber-600' 
-                                : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'
+                                ? 'bg-orange-600 text-white border-orange-600' 
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                              }`}
                            >
                              {labels[loc]}
@@ -543,7 +544,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div className="col-span-2">
                        <input 
                         type="text" 
-                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
+                        className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-medium focus:ring-orange-500 focus:border-orange-500" 
                         placeholder="Notas / Observaciones de la estructura..." 
                         value={tempStructure.notes || ''} 
                         onChange={e => setTempStructure({...tempStructure, notes: e.target.value})} 
@@ -553,16 +554,16 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <button 
                     type="button" 
                     onClick={handleAddStructure}
-                    className="w-full bg-amber-600 text-white p-2 rounded-lg text-xs font-bold hover:bg-amber-700"
+                    className="w-full bg-slate-900 text-white p-3 rounded-lg text-xs font-bold hover:bg-slate-800 shadow-sm"
                    >
                      + Agregar Estructura
                    </button>
               </div>
 
                {structures.length > 0 && (
-                <div className="mt-2 bg-white rounded-lg border border-amber-100 overflow-hidden">
+                <div className="mt-2 bg-white rounded-lg border border-slate-200 overflow-hidden">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-amber-50 text-amber-700 font-semibold">
+                    <thead className="bg-slate-100 text-slate-700 font-semibold">
                       <tr>
                         <th className="p-2">Tipo/Ubic</th>
                         <th className="p-2">Datos</th>
@@ -570,29 +571,29 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                         <th className="p-2 text-right"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-50">
+                    <tbody className="divide-y divide-slate-100">
                       {structures.map((st, idx) => {
                         const locLabels: Record<string, string> = { left: 'I', right: 'D', up: 'T', down: 'P' };
                         const locString = st.location?.map(l => locLabels[l]).join(',') || '-';
                         return (
                         <tr key={idx}>
-                          <td className="p-2 font-bold uppercase text-xs text-amber-900">
+                          <td className="p-2 font-bold uppercase text-xs text-slate-800">
                             <div>{st.type}</div>
-                            {st.otherType && <div className="text-[10px] normal-case font-bold text-amber-600">{st.otherType}</div>}
-                            <div className="text-[10px] font-normal text-amber-700 flex gap-1 mt-0.5">
+                            {st.otherType && <div className="text-[10px] normal-case font-bold text-slate-500">{st.otherType}</div>}
+                            <div className="text-[10px] font-normal text-slate-500 flex gap-1 mt-0.5">
                               <span>Dist: {st.distanceFromStart}m</span>
                               {st.location && st.location.length > 0 && (
-                                <span className="bg-amber-100 px-1 rounded text-amber-800 font-bold">{locString}</span>
+                                <span className="bg-slate-200 px-1 rounded text-slate-700 font-bold">{locString}</span>
                               )}
                             </div>
                           </td>
-                          <td className="p-2 text-amber-900">
+                          <td className="p-2 text-slate-800">
                             <div>R: {st.strike}° / B: {st.dip}</div>
-                            {st.aperture && <div className="text-[10px] text-amber-700">Pot: {st.aperture}m</div>}
+                            {st.aperture && <div className="text-[10px] text-slate-500">Pot: {st.aperture}m</div>}
                           </td>
-                          <td className="p-2 text-amber-700 italic truncate max-w-[100px]">{st.notes}</td>
+                          <td className="p-2 text-slate-600 italic truncate max-w-[100px]">{st.notes}</td>
                           <td className="p-2 text-right">
-                            <button type="button" onClick={() => removeStructure(idx)} className="text-amber-500 hover:bg-amber-100 p-1 rounded">
+                            <button type="button" onClick={() => removeStructure(idx)} className="text-red-500 hover:bg-red-50 p-1 rounded">
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </td>
@@ -605,8 +606,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
             </div>
 
             {/* Section 4: Final Profile */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+            <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
                 <Ruler className="w-4 h-4 text-slate-500" /> Perfil Final (Estación {advanceData.nextName})
               </h3>
               

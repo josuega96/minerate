@@ -377,7 +377,7 @@ const StationList: React.FC<StationListProps> = ({
               </div>
 
               <button 
-                type="button"
+                type="submit"
                 className="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl mt-2 hover:bg-orange-700 shadow-lg shadow-orange-200"
               >
                 Crear Sector
