@@ -329,7 +329,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                   <InputGroup label="Azimut / Rumbo" name="azimuth" type="number" step="any" value={advanceData.azimuth} onChange={e => setAdvanceData({...advanceData, azimuth: e.target.value})} required placeholder="0-360°" />
                 </div>
                 <div className="col-span-1">
-                  <InputGroup label="BUZ" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="Ej: +1, -1, 45 NE" />
+                  <InputGroup label="∠ Vertical" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="Ej: +1, -1, 45 NE" />
                 </div>
               </div>
             </div>

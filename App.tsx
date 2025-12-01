@@ -202,32 +202,34 @@ const App: React.FC = () => {
     syncService.attemptSync();
   };
 
+  // Determine if we should show the sync status bar
+  // Show if: Offline OR Error OR Syncing OR Pending Uploads > 0
+  const showSyncBar = syncStatus !== 'online' || pendingUploads > 0;
+
   return (
     <div className="h-screen w-full bg-slate-100 overflow-hidden flex justify-center">
       <div className="w-full max-w-md h-full bg-slate-50 shadow-2xl relative flex flex-col border-x border-slate-200">
         
         {/* Sync Status Bar */}
-        <div className={`
-          px-4 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider transition-colors
-          ${syncStatus === 'offline' ? 'bg-slate-800 text-slate-300' : 
-            syncStatus === 'error' ? 'bg-red-600 text-white' :
-            syncStatus === 'syncing' ? 'bg-blue-600 text-white' :
-            pendingUploads > 0 ? 'bg-amber-500 text-white' : 'bg-slate-700 text-blue-400'}
-        `}>
-          <div className="flex items-center gap-2">
-            {syncStatus === 'offline' && <><CloudOff className="w-3 h-3" /> Sin Conexión</>}
-            {syncStatus === 'syncing' && <><RefreshCw className="w-3 h-3 animate-spin" /> Sincronizando...</>}
-            {syncStatus === 'error' && <><AlertTriangle className="w-3 h-3" /> Error de Sync</>}
-            {syncStatus === 'online' && (
-               pendingUploads > 0 
-                 ? <><Cloud className="w-3 h-3" /> {pendingUploads} Pendientes</>
-                 : <><CheckCircle2 className="w-3 h-3" /> Datos Sincronizados</>
+        {showSyncBar && (
+          <div className={`
+            px-4 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider transition-colors
+            ${syncStatus === 'offline' ? 'bg-slate-800 text-slate-300' : 
+              syncStatus === 'error' ? 'bg-red-600 text-white' :
+              syncStatus === 'syncing' ? 'bg-blue-600 text-white' :
+              pendingUploads > 0 ? 'bg-amber-500 text-white' : 'bg-slate-700 text-blue-400'}
+          `}>
+            <div className="flex items-center gap-2">
+              {syncStatus === 'offline' && <><CloudOff className="w-3 h-3" /> Sin Conexión</>}
+              {syncStatus === 'syncing' && <><RefreshCw className="w-3 h-3 animate-spin" /> Sincronizando...</>}
+              {syncStatus === 'error' && <><AlertTriangle className="w-3 h-3" /> Error de Sync</>}
+              {syncStatus === 'online' && pendingUploads > 0 && <><Cloud className="w-3 h-3" /> {pendingUploads} Pendientes</>}
+            </div>
+            {syncStatus === 'online' && pendingUploads > 0 && (
+              <button onClick={() => syncService.attemptSync()} className="hover:underline">Sincronizar ahora</button>
             )}
           </div>
-          {syncStatus === 'online' && pendingUploads > 0 && (
-            <button onClick={() => syncService.attemptSync()} className="hover:underline">Sincronizar ahora</button>
-          )}
-        </div>
+        )}
 
         <div className="flex-1 overflow-hidden relative">
           {currentView === 'home' && (
