@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Project, Station, Segment, Structure, Subproject } from '../types';
 import { getStations, getSegments, getStructures, getSubprojects, getAllProjectStations } from '../services/db';
-import { ArrowRight, MapPin, Plus, Download, Eye, ChevronLeft, Pencil, FolderPlus, GitBranch, Layers } from 'lucide-react';
+import { ArrowRight, MapPin, Plus, Download, Eye, ChevronLeft, Pencil, FolderPlus, GitBranch, Layers, TableProperties } from 'lucide-react';
 
 interface StationListProps {
   project: Project;
@@ -13,6 +13,7 @@ interface StationListProps {
   onAddStation: (lastStation: Station | null) => void;
   onAddStructure: (station: Station) => void;
   onViewSketch: () => void;
+  onViewTable: () => void;
   onEditStation: (station: Station) => void;
 }
 
@@ -25,6 +26,7 @@ const StationList: React.FC<StationListProps> = ({
   onAddStation, 
   onAddStructure, 
   onViewSketch, 
+  onViewTable,
   onEditStation 
 }) => {
   const [stations, setStations] = useState<Station[]>([]);
@@ -66,7 +68,8 @@ const StationList: React.FC<StationListProps> = ({
 
   const exportCSV = () => {
     const headers = "ID,Station,East,North,Elev,Notes\n";
-    const rows = stations.map(s => `${s.id},${s.name},${s.easting.toFixed(3)},${s.northing.toFixed(3)},${s.elevation.toFixed(3)},"${s.notes || ''}"`).join("\n");
+    // Modified: Remove .toFixed(3) to prevent rounding
+    const rows = stations.map(s => `${s.id},${s.name},${s.easting},${s.northing},${s.elevation},"${s.notes || ''}"`).join("\n");
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -146,6 +149,12 @@ const StationList: React.FC<StationListProps> = ({
       {/* Action Bar */}
       <div className="bg-stone-100 p-2 flex gap-2 border-b border-stone-200">
           <button 
+            onClick={onViewTable}
+            className="flex-1 bg-white text-stone-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-stone-200 shadow-sm active:scale-95 transition-transform"
+          >
+            <TableProperties className="w-4 h-4" /> Ver Tabla
+          </button>
+          <button 
             onClick={onViewSketch}
             className="flex-1 bg-white text-emerald-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-stone-200 shadow-sm active:scale-95 transition-transform"
           >
@@ -155,7 +164,7 @@ const StationList: React.FC<StationListProps> = ({
             onClick={exportCSV}
             className="px-4 bg-white text-stone-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-stone-200 shadow-sm active:scale-95 transition-transform"
           >
-            <Download className="w-4 h-4" /> CSV
+            <Download className="w-4 h-4" />
           </button>
       </div>
 
@@ -171,7 +180,12 @@ const StationList: React.FC<StationListProps> = ({
           <div className="relative border-l-2 border-stone-300 ml-4 space-y-6">
             {stations.map((station, index) => {
               const segment = segments.find(s => s.toStationId === station.id);
-              const stationStructures = structures.filter(s => s.stationId === station.id);
+              // Display logic: Show structures associated with the INCOMING segment (Origin -> This Station)
+              // If we are at the Origin, we usually don't show structures unless they are specifically attached to the point (not supported yet)
+              const stationStructures = segment 
+                ? structures.filter(s => s.stationId === segment.fromStationId)
+                : [];
+                
               const fromStation = segment ? stations.find(s => s.id === segment.fromStationId) : null;
 
               return (
@@ -202,10 +216,11 @@ const StationList: React.FC<StationListProps> = ({
                           )}
                           {station.isOrigin && <span className="text-[10px] bg-stone-800 text-white px-1.5 rounded">ORIGEN</span>}
                         </h3>
+                        {/* Modified: Remove .toFixed(3) for full precision display */}
                         <div className="font-mono text-xs text-stone-500 mt-1 grid grid-cols-3 gap-2">
-                          <span>E: {station.easting.toFixed(3)}</span>
-                          <span>N: {station.northing.toFixed(3)}</span>
-                          <span>Z: {station.elevation.toFixed(3)}</span>
+                          <span>E: {station.easting}</span>
+                          <span>N: {station.northing}</span>
+                          <span>Z: {station.elevation}</span>
                         </div>
                       </div>
                       
@@ -220,14 +235,17 @@ const StationList: React.FC<StationListProps> = ({
                       </div>
                     </div>
 
-                    {/* Structures attached */}
+                    {/* Structures attached (from the segment arriving here) */}
                     {stationStructures.length > 0 && (
                       <div className="mt-3 pt-2 border-t border-dashed border-stone-200 space-y-1">
                         {stationStructures.map(str => (
                           <div key={str.id} className="text-xs flex items-center gap-2 text-stone-600">
                             <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                            <span className="font-bold uppercase">{str.type}</span>
-                            <span>Rumbo: {str.strike}° / Buz: {str.dip}</span>
+                            <span className="font-bold uppercase">
+                              {str.type}
+                            </span>
+                            {str.otherType && <span className="text-stone-500 normal-case">: {str.otherType}</span>}
+                            <span>• R: {str.strike}° / B: {str.dip}</span>
                           </div>
                         ))}
                       </div>
@@ -253,8 +271,8 @@ const StationList: React.FC<StationListProps> = ({
 
       {/* New Subproject Modal */}
       {isCreatingSub && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200 border border-stone-200">
             <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                <h3 className="font-bold text-lg text-stone-800 flex items-center gap-2">
                  <FolderPlus className="w-5 h-5 text-emerald-600"/> Nuevo Sector
@@ -267,7 +285,7 @@ const StationList: React.FC<StationListProps> = ({
                 <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Nombre (Galería/Chimenea)</label>
                 <input 
                   autoFocus
-                  className="w-full border border-stone-300 rounded-lg p-3 font-bold text-stone-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full bg-white border border-stone-300 rounded-lg p-3 font-bold text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-emerald-500 outline-none"
                   placeholder="Ej. Galería Secundaria B"
                   value={newSubName}
                   onChange={e => setNewSubName(e.target.value)}
@@ -279,7 +297,7 @@ const StationList: React.FC<StationListProps> = ({
                 <label className="block text-xs font-bold text-stone-500 uppercase mb-1">Origen / Punto de Partida</label>
                 <div className="relative">
                   <select
-                    className="w-full border border-stone-300 rounded-lg p-3 font-medium text-stone-700 appearance-none bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    className="w-full bg-white border border-stone-300 rounded-lg p-3 font-medium text-stone-900 appearance-none focus:ring-2 focus:ring-emerald-500 outline-none text-stone-900 bg-white"
                     value={selectedOriginId}
                     onChange={e => setSelectedOriginId(e.target.value)}
                   >
@@ -287,7 +305,7 @@ const StationList: React.FC<StationListProps> = ({
                     <optgroup label="Puntos Existentes (Todo el Proyecto)">
                       {allStations.map(s => (
                         <option key={s.id} value={s.id}>
-                          {s.name} (E:{s.easting.toFixed(1)}, N:{s.northing.toFixed(1)})
+                          {s.name} (E:{s.easting}, N:{s.northing})
                         </option>
                       ))}
                     </optgroup>

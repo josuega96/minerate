@@ -67,6 +67,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
   const [tempStructure, setTempStructure] = useState<Partial<Structure>>({
     type: 'veta',
+    otherType: '',
     strike: undefined,
     aperture: undefined,
     distanceFromStart: undefined,
@@ -157,6 +158,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
       stationId: 0, // Placeholder, resolved in DB
       distanceFromStart: tempStructure.distanceFromStart || 0,
       type: tempStructure.type as any,
+      otherType: tempStructure.otherType,
       strike: tempStructure.strike || 0,
       dip: combinedDip, 
       location: structLocation,
@@ -165,7 +167,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
     };
 
     setStructures([...structures, newStructure]);
-    setTempStructure({ type: 'veta', strike: undefined, aperture: undefined, distanceFromStart: undefined, notes: '' });
+    setTempStructure({ type: 'veta', otherType: '', strike: undefined, aperture: undefined, distanceFromStart: undefined, notes: '' });
     setStructDipAngle('');
     setStructDipDir('NE');
     setStructLocation([]);
@@ -277,14 +279,15 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
           <div className="space-y-4">
             <InputGroup label="Nombre Estación" name="name" value={originData.name} onChange={e => setOriginData({...originData, name: e.target.value})} required />
             <div className="grid grid-cols-2 gap-4">
-              <InputGroup label="Este (X)" name="easting" type="number" step="0.001" value={originData.easting} onChange={e => setOriginData({...originData, easting: e.target.value})} required />
-              <InputGroup label="Norte (Y)" name="northing" type="number" step="0.001" value={originData.northing} onChange={e => setOriginData({...originData, northing: e.target.value})} required />
-              <InputGroup label="Cota (Z)" name="elevation" type="number" step="0.001" value={originData.elevation} onChange={e => setOriginData({...originData, elevation: e.target.value})} required />
+              {/* Changed step to "any" for all coordinate inputs */}
+              <InputGroup label="Este (X)" name="easting" type="number" step="any" value={originData.easting} onChange={e => setOriginData({...originData, easting: e.target.value})} required />
+              <InputGroup label="Norte (Y)" name="northing" type="number" step="any" value={originData.northing} onChange={e => setOriginData({...originData, northing: e.target.value})} required />
+              <InputGroup label="Cota (Z)" name="elevation" type="number" step="any" value={originData.elevation} onChange={e => setOriginData({...originData, elevation: e.target.value})} required />
             </div>
             <div className="pt-2">
               <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Notas</label>
               <textarea 
-                className="w-full bg-white border border-stone-300 rounded-lg p-3 text-emerald-900 font-medium focus:ring-emerald-500 focus:border-emerald-500" 
+                className="w-full bg-white border border-stone-300 rounded-lg p-3 text-stone-900 font-medium focus:ring-emerald-500 focus:border-emerald-500" 
                 rows={3} 
                 value={originData.notes} 
                 onChange={e => setOriginData({...originData, notes: e.target.value})} 
@@ -323,10 +326,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-1">
-                  <InputGroup label="Azimut / Rumbo" name="azimuth" type="number" value={advanceData.azimuth} onChange={e => setAdvanceData({...advanceData, azimuth: e.target.value})} required placeholder="0-360°" />
+                  <InputGroup label="Azimut / Rumbo" name="azimuth" type="number" step="any" value={advanceData.azimuth} onChange={e => setAdvanceData({...advanceData, azimuth: e.target.value})} required placeholder="0-360°" />
                 </div>
                 <div className="col-span-1">
-                  <InputGroup label="Buzamiento (+1, -1, 45 NE)" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="+/-, NE/SW" />
+                  <InputGroup label="BUZ" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="Ej: +1, -1, 45 NE" />
                 </div>
               </div>
             </div>
@@ -344,8 +347,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div>
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Dist.</label>
                       <input 
-                        type="number" step="0.1" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        type="number" step="any" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.dist} 
                         onChange={e => setTempIntermediate({...tempIntermediate, dist: e.target.value})} 
                         placeholder="m" 
@@ -354,8 +357,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div>
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Izq</label>
                       <input 
-                        type="number" step="0.1" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        type="number" step="any" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.left} 
                         onChange={e => setTempIntermediate({...tempIntermediate, left: e.target.value})} 
                         placeholder="L" 
@@ -364,8 +367,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div>
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Der</label>
                       <input 
-                        type="number" step="0.1" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        type="number" step="any" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.right} 
                         onChange={e => setTempIntermediate({...tempIntermediate, right: e.target.value})} 
                         placeholder="R" 
@@ -374,8 +377,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div>
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Techo</label>
                       <input 
-                        type="number" step="0.1" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        type="number" step="any" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.up} 
                         onChange={e => setTempIntermediate({...tempIntermediate, up: e.target.value})} 
                         placeholder="T" 
@@ -384,8 +387,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div>
                       <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Piso</label>
                       <input 
-                        type="number" step="0.1" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        type="number" step="any" 
+                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
                         value={tempIntermediate.down} 
                         onChange={e => setTempIntermediate({...tempIntermediate, down: e.target.value})} 
                         placeholder="P" 
@@ -396,7 +399,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <div className="flex gap-2">
                     <input 
                       type="text" 
-                      className="flex-1 p-2 bg-white border border-stone-300 rounded-lg text-sm text-emerald-900 font-medium focus:ring-emerald-500 focus:border-emerald-500"
+                      className="flex-1 p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-medium focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Descripción / Nota..."
                       value={tempIntermediate.notes}
                       onChange={e => setTempIntermediate({...tempIntermediate, notes: e.target.value})}
@@ -459,7 +462,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
                        <select 
-                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500"
                         value={tempStructure.type}
                         onChange={e => setTempStructure({...tempStructure, type: e.target.value as any})}
                       >
@@ -471,21 +474,34 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                         <option value="otros">Otros</option>
                       </select>
                     </div>
+
+                    {/* Input for Structure Name - NOW AVAILABLE FOR ALL TYPES */}
+                    <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500 placeholder-amber-400"
+                        placeholder="Nombre / Detalle (Ej. Falla Principal)"
+                        value={tempStructure.otherType || ''}
+                        onChange={e => setTempStructure({...tempStructure, otherType: e.target.value})}
+                      />
+                    </div>
+
                     <div>
-                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
                     </div>
                     <div>
                       {/* Split Dip Input: Angle + Direction */}
                       <div className="flex gap-1 h-full">
                          <input 
-                           type="number" 
-                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
-                           placeholder="Ang" 
+                           type="number"
+                           step="any"
+                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
+                           placeholder="Az" 
                            value={structDipAngle} 
                            onChange={e => setStructDipAngle(e.target.value)} 
                          />
                          <select 
-                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500"
                            value={structDipDir}
                            onChange={e => setStructDipDir(e.target.value)}
                          >
@@ -497,10 +513,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                       </div>
                     </div>
                     <div>
-                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
                     </div>
                      <div>
-                      <input type="number" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
                     </div>
 
                     {/* New Location Selector */}
@@ -528,7 +544,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div className="col-span-2">
                        <input 
                         type="text" 
-                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-amber-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
                         placeholder="Notas / Observaciones de la estructura..." 
                         value={tempStructure.notes || ''} 
                         onChange={e => setTempStructure({...tempStructure, notes: e.target.value})} 
@@ -563,7 +579,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                         <tr key={idx}>
                           <td className="p-2 font-bold uppercase text-xs text-amber-900">
                             <div>{st.type}</div>
-                            <div className="text-[10px] font-normal text-amber-700 flex gap-1">
+                            {st.otherType && <div className="text-[10px] normal-case font-bold text-amber-600">{st.otherType}</div>}
+                            <div className="text-[10px] font-normal text-amber-700 flex gap-1 mt-0.5">
                               <span>Dist: {st.distanceFromStart}m</span>
                               {st.location && st.location.length > 0 && (
                                 <span className="bg-amber-100 px-1 rounded text-amber-800 font-bold">{locString}</span>
@@ -595,14 +612,14 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
               </h3>
               
               <div className="mb-2">
-                 <InputGroup label="Distancia Inclinada (m)" name="distance" type="number" step="0.01" value={advanceData.distance} onChange={e => setAdvanceData({...advanceData, distance: e.target.value})} required />
+                 <InputGroup label="Distancia Inclinada (m)" name="distance" type="number" step="any" value={advanceData.distance} onChange={e => setAdvanceData({...advanceData, distance: e.target.value})} required />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <InputGroup label="Izq (m)" name="left" type="number" step="0.01" value={advanceData.left} onChange={e => setAdvanceData({...advanceData, left: e.target.value})} />
-                <InputGroup label="Der (m)" name="right" type="number" step="0.01" value={advanceData.right} onChange={e => setAdvanceData({...advanceData, right: e.target.value})} />
-                <InputGroup label="Techo (m)" name="up" type="number" step="0.01" value={advanceData.up} onChange={e => setAdvanceData({...advanceData, up: e.target.value})} />
-                <InputGroup label="Piso (m)" name="down" type="number" step="0.01" value={advanceData.down} onChange={e => setAdvanceData({...advanceData, down: e.target.value})} />
+                <InputGroup label="Izq (m)" name="left" type="number" step="any" value={advanceData.left} onChange={e => setAdvanceData({...advanceData, left: e.target.value})} />
+                <InputGroup label="Der (m)" name="right" type="number" step="any" value={advanceData.right} onChange={e => setAdvanceData({...advanceData, right: e.target.value})} />
+                <InputGroup label="Techo (m)" name="up" type="number" step="any" value={advanceData.up} onChange={e => setAdvanceData({...advanceData, up: e.target.value})} />
+                <InputGroup label="Piso (m)" name="down" type="number" step="any" value={advanceData.down} onChange={e => setAdvanceData({...advanceData, down: e.target.value})} />
               </div>
             </div>
           </div>

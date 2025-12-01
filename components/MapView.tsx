@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { GeoPoint } from '../types';
 import { ZoomIn, ZoomOut, Maximize, Map as MapIcon, Navigation } from 'lucide-react';
@@ -126,10 +127,11 @@ const MapView: React.FC<MapViewProps> = ({ points }) => {
                 {selectedPoint.pointId}
                 {selectedPoint.intermediatePointId && <span className="text-xs font-normal text-amber-600">({selectedPoint.intermediatePointId})</span>}
               </h3>
+              {/* Modified: Remove .toFixed(3) */}
               <div className="grid grid-cols-2 gap-x-4 text-xs mt-1 font-mono text-slate-600">
-                <span>E: {selectedPoint.easting.toFixed(3)}</span>
-                <span>N: {selectedPoint.northing.toFixed(3)}</span>
-                <span>Z: {selectedPoint.elevation.toFixed(3)}</span>
+                <span>E: {selectedPoint.easting}</span>
+                <span>N: {selectedPoint.northing}</span>
+                <span>Z: {selectedPoint.elevation}</span>
               </div>
             </div>
             <button onClick={() => setSelectedPoint(null)} className="text-slate-400 hover:text-slate-600 px-2">✕</button>

@@ -4,6 +4,7 @@ import ProjectList from './components/ProjectList';
 import StationList from './components/StationList';
 import Forms from './components/Forms';
 import SketchView from './components/SketchView';
+import TableView from './components/TableView';
 import { Project, Station, Segment, Structure, IntermediatePoint, ViewMode, Subproject } from './types';
 import { saveStationAndSegment, updateStationAndSegment, getSegments, getIntermediatePoints, getStructures, db, createSubproject, getSubprojects } from './services/db';
 import { syncService } from './services/sync';
@@ -228,6 +229,7 @@ const App: React.FC = () => {
               onAddStation={handleAddStation}
               onAddStructure={() => {}} 
               onViewSketch={() => setCurrentView('sketch')}
+              onViewTable={() => setCurrentView('table_view')}
               onEditStation={handleEditStation}
             />
           )}
@@ -251,6 +253,15 @@ const App: React.FC = () => {
             <SketchView 
               projectId={activeProject.id!} 
               onClose={() => setCurrentView('project_detail')}
+            />
+          )}
+
+          {currentView === 'table_view' && activeProject && (
+            <TableView 
+              project={activeProject}
+              activeSubproject={activeSubproject}
+              onClose={() => setCurrentView('project_detail')}
+              onEditStation={handleEditStation}
             />
           )}
         </div>

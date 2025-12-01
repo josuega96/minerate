@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Download, Plus, FileText, Database, MapPin, Route, ArrowRight, TrendingUp, Ruler, Map as MapIcon, List } from 'lucide-react';
 import { GeoPoint } from '../types';
@@ -153,22 +154,25 @@ const PointList: React.FC<PointListProps> = ({ points, onAddNew }) => {
                       <div className="grid grid-cols-3 gap-4 border-t border-slate-50 pt-3">
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase text-slate-400 font-semibold mb-0.5">Azimut</span>
+                          {/* Modified: Removed toFixed(4) */}
                           <div className="flex items-center gap-1 text-slate-700 font-mono text-sm">
                             <TrendingUp className="w-3 h-3 text-slate-400" />
-                            {point.horizontalAngle?.toFixed(4)}°
+                            {point.horizontalAngle}°
                           </div>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase text-slate-400 font-semibold mb-0.5">Dist. Inc.</span>
+                          {/* Modified: Removed toFixed(3) */}
                           <div className="flex items-center gap-1 text-slate-700 font-mono text-sm">
                             <Ruler className="w-3 h-3 text-slate-400" />
-                            {point.slantDistance?.toFixed(3)}m
+                            {point.slantDistance}m
                           </div>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase text-slate-400 font-semibold mb-0.5">V. Angle</span>
+                          {/* Modified: Removed toFixed(4) */}
                           <div className="text-slate-700 font-mono text-sm">
-                            {point.verticalAngle?.toFixed(4)}°
+                            {point.verticalAngle}°
                           </div>
                         </div>
                       </div>
@@ -214,15 +218,18 @@ const PointList: React.FC<PointListProps> = ({ points, onAddNew }) => {
                           <div className="grid grid-cols-3 gap-2 text-xs mb-2">
                             <div className="bg-slate-50 p-1 rounded border border-slate-100">
                               <span className="block text-[9px] text-slate-400 uppercase">East</span>
-                              <span className="font-mono text-slate-700 truncate">{point.easting.toFixed(3)}</span>
+                              {/* Modified: Removed toFixed(3) */}
+                              <span className="font-mono text-slate-700 truncate">{point.easting}</span>
                             </div>
                             <div className="bg-slate-50 p-1 rounded border border-slate-100">
                               <span className="block text-[9px] text-slate-400 uppercase">North</span>
-                              <span className="font-mono text-slate-700 truncate">{point.northing.toFixed(3)}</span>
+                              {/* Modified: Removed toFixed(3) */}
+                              <span className="font-mono text-slate-700 truncate">{point.northing}</span>
                             </div>
                             <div className="bg-slate-50 p-1 rounded border border-slate-100">
                               <span className="block text-[9px] text-slate-400 uppercase">Elev</span>
-                              <span className="font-mono text-slate-700 truncate">{point.elevation.toFixed(3)}</span>
+                              {/* Modified: Removed toFixed(3) */}
+                              <span className="font-mono text-slate-700 truncate">{point.elevation}</span>
                             </div>
                           </div>
 

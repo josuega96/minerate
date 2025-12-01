@@ -33,40 +33,46 @@ export const getProjects = () => db.projects.orderBy('createdAt').reverse().toAr
 export const createProject = (p: Project) => db.projects.add({ ...p, synced: false, updatedAt: Date.now() });
 export const deleteProject = async (id: number) => {
   await (db as any).transaction('rw', db.projects, db.subprojects, db.stations, db.segments, db.structures, db.intermediatePoints, async () => {
-    await db.subprojects.where({ projectId: id }).delete();
-    await db.stations.where({ projectId: id }).delete();
-    await db.segments.where({ projectId: id }).delete();
-    await db.structures.where({ projectId: id }).delete();
-    await db.intermediatePoints.where({ projectId: id }).delete();
+    await db.subprojects.where('projectId').equals(id).delete();
+    await db.stations.where('projectId').equals(id).delete();
+    await db.segments.where('projectId').equals(id).delete();
+    await db.structures.where('projectId').equals(id).delete();
+    await db.intermediatePoints.where('projectId').equals(id).delete();
     await db.projects.delete(id);
   });
 };
 
 // Subprojects
-export const getSubprojects = (projectId: number) => db.subprojects.where({ projectId }).toArray();
+export const getSubprojects = (projectId: number) => db.subprojects.where('projectId').equals(projectId).toArray();
 export const createSubproject = (sp: Subproject) => db.subprojects.add({ ...sp, synced: false, updatedAt: Date.now() });
 
 // Stations
-// Modified to filter by Subproject (optional)
 export const getStations = (projectId: number, subprojectId?: number | null) => {
-  if (subprojectId === undefined) return db.stations.where({ projectId }).toArray(); // Get all (for linking)
+  // If subprojectId is undefined, return all stations for the project (used for linking origin across subprojects)
+  if (subprojectId === undefined) {
+    return db.stations.where('projectId').equals(projectId).toArray();
+  }
   
   if (subprojectId === null) {
-    // Get "Main" stations (where subprojectId is undefined or null)
-    return db.stations.where({ projectId }).filter(s => s.subprojectId == null).toArray();
+    // Get "Main" stations (where subprojectId is null/undefined)
+    return db.stations.where('projectId').equals(projectId).filter(s => s.subprojectId == null).toArray();
   }
-  return db.stations.where({ projectId, subprojectId }).toArray();
+  
+  // Get stations for specific subproject
+  return db.stations.where('projectId').equals(projectId).filter(s => s.subprojectId === subprojectId).toArray();
 };
 
-export const getAllProjectStations = (projectId: number) => db.stations.where({ projectId }).toArray();
+export const getAllProjectStations = (projectId: number) => db.stations.where('projectId').equals(projectId).toArray();
 
 export const getLastStation = async (projectId: number, subprojectId?: number | null) => {
-  let collection = db.stations.where({ projectId });
+  let collection;
   
   if (subprojectId === null) {
-    collection = collection.filter(s => s.subprojectId == null);
+    collection = db.stations.where('projectId').equals(projectId).filter(s => s.subprojectId == null);
   } else if (subprojectId !== undefined) {
-    collection = db.stations.where({ projectId, subprojectId });
+    collection = db.stations.where('projectId').equals(projectId).filter(s => s.subprojectId === subprojectId);
+  } else {
+    collection = db.stations.where('projectId').equals(projectId);
   }
 
   const stations = await collection.reverse().sortBy('id');
@@ -75,29 +81,32 @@ export const getLastStation = async (projectId: number, subprojectId?: number | 
 
 // Segments
 export const getSegments = (projectId: number, subprojectId?: number | null) => {
-  if (subprojectId === undefined) return db.segments.where({ projectId }).toArray();
+  if (subprojectId === undefined) return db.segments.where('projectId').equals(projectId).toArray();
+  
   if (subprojectId === null) {
-    return db.segments.where({ projectId }).filter(s => s.subprojectId == null).toArray();
+    return db.segments.where('projectId').equals(projectId).filter(s => s.subprojectId == null).toArray();
   }
-  return db.segments.where({ projectId, subprojectId }).toArray();
+  return db.segments.where('projectId').equals(projectId).filter(s => s.subprojectId === subprojectId).toArray();
 };
 
 // Structures
 export const getStructures = (projectId: number, subprojectId?: number | null) => {
-  if (subprojectId === undefined) return db.structures.where({ projectId }).toArray();
+  if (subprojectId === undefined) return db.structures.where('projectId').equals(projectId).toArray();
+  
   if (subprojectId === null) {
-    return db.structures.where({ projectId }).filter(s => s.subprojectId == null).toArray();
+    return db.structures.where('projectId').equals(projectId).filter(s => s.subprojectId == null).toArray();
   }
-  return db.structures.where({ projectId, subprojectId }).toArray();
+  return db.structures.where('projectId').equals(projectId).filter(s => s.subprojectId === subprojectId).toArray();
 };
 
 // Intermediate Points
 export const getIntermediatePoints = (projectId: number, subprojectId?: number | null) => {
-  if (subprojectId === undefined) return db.intermediatePoints.where({ projectId }).toArray();
+  if (subprojectId === undefined) return db.intermediatePoints.where('projectId').equals(projectId).toArray();
+  
   if (subprojectId === null) {
-    return db.intermediatePoints.where({ projectId }).filter(s => s.subprojectId == null).toArray();
+    return db.intermediatePoints.where('projectId').equals(projectId).filter(s => s.subprojectId == null).toArray();
   }
-  return db.intermediatePoints.where({ projectId, subprojectId }).toArray();
+  return db.intermediatePoints.where('projectId').equals(projectId).filter(s => s.subprojectId === subprojectId).toArray();
 };
 
 // Complex Actions
@@ -181,7 +190,8 @@ export const updateStationAndSegment = async (
       });
 
       // 3. Replace Intermediate Points
-      await db.intermediatePoints.where({ segmentId }).delete();
+      // Explicitly use index 'segmentId'
+      await db.intermediatePoints.where('segmentId').equals(segmentId).delete();
       
       if (intermediates.length > 0) {
         const pointsToSave = intermediates.map(pt => ({
@@ -198,7 +208,8 @@ export const updateStationAndSegment = async (
       // 4. Replace Structures
       const segment = await db.segments.get(segmentId);
       if (segment) {
-        await db.structures.where({ stationId: segment.fromStationId }).delete();
+        // Explicitly use index 'stationId' for structures linked to the FROM station
+        await db.structures.where('stationId').equals(segment.fromStationId).delete();
         
         if (structures.length > 0) {
           const structuresToSave = structures.map(str => ({
@@ -241,22 +252,28 @@ export const downloadData = (content: string, filename: string, type: 'csv' | 'j
 // --- Sync Helpers ---
 
 export const getUnsyncedCount = async () => {
-  const p = await db.projects.where({ synced: false }).count();
-  const sp = await db.subprojects.where({ synced: false }).count();
-  const st = await db.stations.where({ synced: false }).count();
-  const sg = await db.segments.where({ synced: false }).count();
-  const str = await db.structures.where({ synced: false }).count();
-  const ip = await db.intermediatePoints.where({ synced: false }).count();
+  const p = await db.projects.where('synced').equals(0).count(); // Dexie stores boolean as 0/1 in indexeddb mostly or handles boolean keys
+  // Safer to use .filter for booleans if index is not behaving, but usually it works.
+  // Actually, 'synced' is not the primary key, so where('synced').equals(false) works if indexed.
+  // Assuming 'synced' index works with booleans (Dexie usually handles this).
+  // If issues arise, change to .filter(x => !x.synced).
+  
+  // Using .filter is safest for booleans across browsers if not strictly indexed as 0/1
+  const sp = await db.subprojects.filter(x => x.synced === false).count();
+  const st = await db.stations.filter(x => x.synced === false).count();
+  const sg = await db.segments.filter(x => x.synced === false).count();
+  const str = await db.structures.filter(x => x.synced === false).count();
+  const ip = await db.intermediatePoints.filter(x => x.synced === false).count();
   return p + sp + st + sg + str + ip;
 };
 
 export const markAllAsSynced = async () => {
   await (db as any).transaction('rw', db.projects, db.subprojects, db.stations, db.segments, db.structures, db.intermediatePoints, async () => {
-    await db.projects.where({ synced: false }).modify({ synced: true });
-    await db.subprojects.where({ synced: false }).modify({ synced: true });
-    await db.stations.where({ synced: false }).modify({ synced: true });
-    await db.segments.where({ synced: false }).modify({ synced: true });
-    await db.structures.where({ synced: false }).modify({ synced: true });
-    await db.intermediatePoints.where({ synced: false }).modify({ synced: true });
+    await db.projects.filter(x => x.synced === false).modify({ synced: true });
+    await db.subprojects.filter(x => x.synced === false).modify({ synced: true });
+    await db.stations.filter(x => x.synced === false).modify({ synced: true });
+    await db.segments.filter(x => x.synced === false).modify({ synced: true });
+    await db.structures.filter(x => x.synced === false).modify({ synced: true });
+    await db.intermediatePoints.filter(x => x.synced === false).modify({ synced: true });
   });
 };

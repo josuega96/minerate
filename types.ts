@@ -80,6 +80,7 @@ export interface Structure {
   stationId: number;
   distanceFromStart?: number;
   type: 'falla' | 'veta' | 'estrato' | 'fractura' | 'contacto' | 'otros';
+  otherType?: string; // Custom name if type is 'otros'
   strike: number;
   dip: string | number;
   location?: string[];
@@ -109,4 +110,4 @@ export interface GeoPoint {
   photoDataUrl?: string;
 }
 
-export type ViewMode = 'home' | 'project_detail' | 'form_station' | 'form_advance' | 'sketch';
+export type ViewMode = 'home' | 'project_detail' | 'form_station' | 'form_advance' | 'sketch' | 'table_view';

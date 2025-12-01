@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface InputGroupProps {
@@ -29,7 +30,7 @@ export const InputGroup: React.FC<InputGroupProps> = ({
           required={required}
           step={step}
           placeholder={placeholder}
-          className="w-full bg-white border border-stone-300 text-emerald-900 font-bold text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-3 shadow-sm transition-colors placeholder:text-stone-300 placeholder:font-normal"
+          className="w-full bg-white border border-stone-300 text-stone-900 font-bold text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-3 shadow-sm transition-colors placeholder:text-stone-300 placeholder:font-normal"
         />
         {icon && (
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-stone-400">

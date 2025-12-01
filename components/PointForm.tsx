@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Save, RefreshCw, Wand2, Trash2, ArrowRight, Check, MapPin, Footprints, ChevronLeft, ChevronRight, History, Calculator } from 'lucide-react';
 import { GeoPoint } from '../types';
@@ -195,9 +196,10 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
             const dN = hDist * Math.cos(azRad);
             const dE = hDist * Math.sin(azRad);
 
-            newEasting = parseFloat((currentE + dE).toFixed(3));
-            newNorthing = parseFloat((currentN + dN).toFixed(3));
-            newElevation = parseFloat((currentZ + vDist).toFixed(3));
+            // Modified: Removed toFixed(3) to keep full precision logic
+            newEasting = currentE + dE;
+            newNorthing = currentN + dN;
+            newElevation = currentZ + vDist;
             calcMsg = " (Coordenadas Calculadas)";
           }
           // ----------------------------------------
@@ -388,7 +390,7 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Este (X) *</label>
               <input 
                 ref={eastingRef}
-                name="easting" type="number" step="0.001" 
+                name="easting" type="number" step="any" 
                 value={displayData.easting === undefined ? '' : displayData.easting} 
                 onChange={handleInputChange} required 
                 readOnly={isHistoryMode}
@@ -398,7 +400,7 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Norte (Y) *</label>
               <input 
-                name="northing" type="number" step="0.001" 
+                name="northing" type="number" step="any" 
                 value={displayData.northing === undefined ? '' : displayData.northing} 
                 onChange={handleInputChange} required 
                 readOnly={isHistoryMode}
@@ -406,7 +408,7 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
               />
             </div>
             <div className="col-span-2">
-              <InputGroup label="Cota (Z) / Elevación" name="elevation" type="number" step="0.001" value={displayData.elevation} onChange={handleInputChange} required />
+              <InputGroup label="Cota (Z) / Elevación" name="elevation" type="number" step="any" value={displayData.elevation} onChange={handleInputChange} required />
             </div>
           </div>
         </div>
@@ -436,7 +438,7 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Azimut / Áng. Hz.</label>
               <input 
                 ref={angleRef}
-                name="horizontalAngle" type="number" step="0.0001" 
+                name="horizontalAngle" type="number" step="any" 
                 value={displayData.horizontalAngle === undefined ? '' : displayData.horizontalAngle} 
                 onChange={handleInputChange} 
                 readOnly={isHistoryMode}
@@ -444,9 +446,9 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
                 className="w-full bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 text-lg font-mono disabled:bg-slate-100"
               />
             </div>
-            <InputGroup label="Ángulo Vert. (0=Cenit)" name="verticalAngle" type="number" step="0.0001" value={displayData.verticalAngle} onChange={handleInputChange} />
+            <InputGroup label="Ángulo Vert. (0=Cenit)" name="verticalAngle" type="number" step="any" value={displayData.verticalAngle} onChange={handleInputChange} />
             <div className="col-span-2">
-              <InputGroup label="Distancia Inclinada (m)" name="slantDistance" type="number" step="0.001" value={displayData.slantDistance} onChange={handleInputChange} />
+              <InputGroup label="Distancia Inclinada (m)" name="slantDistance" type="number" step="any" value={displayData.slantDistance} onChange={handleInputChange} />
             </div>
           </div>
         </div>
@@ -462,13 +464,13 @@ const PointForm: React.FC<PointFormProps> = ({ onSave, onExit, existingPoints })
                 <InputGroup label="ID Detalle" name="intermediatePointId" value={displayData.intermediatePointId} onChange={handleInputChange} placeholder="Ej. A-1, Relleno" />
               </div>
               <div className="col-span-1">
-                <InputGroup label="Izq." name="distanceLeft" type="number" step="0.01" value={displayData.distanceLeft} onChange={handleInputChange} />
+                <InputGroup label="Izq." name="distanceLeft" type="number" step="any" value={displayData.distanceLeft} onChange={handleInputChange} />
               </div>
               <div className="col-span-1">
                   <div className="text-center pt-8 text-slate-300 text-xs">--- Eje ---</div>
               </div>
               <div className="col-span-1">
-                <InputGroup label="Der." name="distanceRight" type="number" step="0.01" value={displayData.distanceRight} onChange={handleInputChange} />
+                <InputGroup label="Der." name="distanceRight" type="number" step="any" value={displayData.distanceRight} onChange={handleInputChange} />
               </div>
             </div>
           </div>
