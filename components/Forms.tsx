@@ -25,7 +25,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
   // --- STATE FOR ORIGIN ---
   const [originData, setOriginData] = useState({
-    name: 'E-1',
+    name: '',
     easting: '',
     northing: '',
     elevation: '',
@@ -34,14 +34,14 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
   // --- STATE FOR ADVANCE ---
   const [advanceData, setAdvanceData] = useState({
-    nextName: '', // Auto-calculated usually
+    nextName: '', 
     azimuth: '',
-    dip: '0', // Stored as string to allow "45 NE" or "+5"
+    dip: '', 
     distance: '',
-    left: '1.5',
-    right: '1.5',
-    up: '2.0',
-    down: '0',
+    left: '',
+    right: '',
+    up: '',
+    down: '',
     notes: ''
   });
 
@@ -100,18 +100,6 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
         setIntermediates(initialData.intermediates);
         setStructures(initialData.structures);
       }
-    } else {
-      // Auto-name next station only if NOT editing
-      if (baseStation && type === 'advance') {
-        const match = baseStation.name.match(/(\d+)$/);
-        if (match) {
-          const nextNum = parseInt(match[1]) + 1;
-          const prefix = baseStation.name.replace(/\d+$/, '');
-          setAdvanceData(prev => ({ ...prev, nextName: `${prefix}${nextNum}` }));
-        } else {
-          setAdvanceData(prev => ({ ...prev, nextName: `${baseStation.name}-Sig` }));
-        }
-      }
     }
   }, [baseStation, type, initialData]);
 
@@ -129,6 +117,22 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
     
     setIntermediates([...intermediates, newPoint].sort((a,b) => a.distanceFromStart - b.distanceFromStart));
     setTempIntermediate({ dist: '', left: '', right: '', up: '', down: '', notes: '' });
+  };
+
+  const handleEditIntermediate = (index: number) => {
+    const item = intermediates[index];
+    setTempIntermediate({
+      dist: item.distanceFromStart.toString(),
+      left: item.left?.toString() || '',
+      right: item.right?.toString() || '',
+      up: item.up?.toString() || '',
+      down: item.down?.toString() || '',
+      notes: item.notes || ''
+    });
+    // Remove from list so user can update
+    const newList = [...intermediates];
+    newList.splice(index, 1);
+    setIntermediates(newList);
   };
 
   const removeIntermediate = (index: number) => {
@@ -171,6 +175,39 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
     setStructDipAngle('');
     setStructDipDir('NE');
     setStructLocation([]);
+  };
+
+  const handleEditStructure = (index: number) => {
+    const item = structures[index];
+    
+    // Parse Dip (e.g., "45° NE" or just "45")
+    let angle = '';
+    let dir = 'NE';
+    if (typeof item.dip === 'string') {
+      const parts = item.dip.split(' ');
+      if (parts.length > 0) angle = parts[0].replace('°', '');
+      if (parts.length > 1) dir = parts[1];
+    } else {
+        angle = item.dip.toString();
+    }
+
+    setTempStructure({
+      type: item.type,
+      otherType: item.otherType,
+      strike: item.strike,
+      aperture: item.aperture,
+      distanceFromStart: item.distanceFromStart,
+      notes: item.notes
+    });
+    
+    setStructDipAngle(angle);
+    setStructDipDir(dir);
+    setStructLocation(item.location || []);
+
+    // Remove from list
+    const newList = [...structures];
+    newList.splice(index, 1);
+    setStructures(newList);
   };
 
   const removeStructure = (index: number) => {
@@ -221,12 +258,15 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
       const dE = hDist * Math.sin(radAz);
       const dN = hDist * Math.cos(radAz);
 
+      // Rounding helper (2 decimal places)
+      const round2 = (val: number) => Math.round(val * 100) / 100;
+
       const stationData: Partial<Station> = {
         projectId: project.id!,
         name: advanceData.nextName,
-        easting: sourceStation.easting + dE,
-        northing: sourceStation.northing + dN,
-        elevation: sourceStation.elevation + vDist,
+        easting: round2(sourceStation.easting + dE),
+        northing: round2(sourceStation.northing + dN),
+        elevation: round2(sourceStation.elevation + vDist),
         isOrigin: false,
         notes: advanceData.notes
       };
@@ -237,10 +277,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
         azimuth: az,
         dip: advanceData.dip,
         distance: dist,
-        left: parseFloat(advanceData.left),
-        right: parseFloat(advanceData.right),
-        up: parseFloat(advanceData.up),
-        down: parseFloat(advanceData.down)
+        left: parseFloat(advanceData.left) || 0,
+        right: parseFloat(advanceData.right) || 0,
+        up: parseFloat(advanceData.up) || 0,
+        down: parseFloat(advanceData.down) || 0
       };
 
       if (isEditing && onUpdateStation && initialData) {
@@ -329,7 +369,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                   <InputGroup label="Azimut / Rumbo" name="azimuth" type="number" step="any" value={advanceData.azimuth} onChange={e => setAdvanceData({...advanceData, azimuth: e.target.value})} required placeholder="0-360°" />
                 </div>
                 <div className="col-span-1">
-                  <InputGroup label="∠ Vertical" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="Ej: +1, -1, 45 NE" />
+                  <InputGroup label="∠ VERTICAL" name="dip" type="text" value={advanceData.dip} onChange={e => setAdvanceData({...advanceData, dip: e.target.value})} required placeholder="Ej: +1, -1, 45 NE" />
                 </div>
               </div>
             </div>
@@ -439,7 +479,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                             </div>
                           </td>
                           <td className="p-2 text-slate-500 italic truncate max-w-[80px]">{pt.notes}</td>
-                          <td className="p-2 text-right">
+                          <td className="p-2 text-right flex justify-end gap-1">
+                            <button type="button" onClick={() => handleEditIntermediate(idx)} className="text-blue-500 hover:bg-blue-50 p-1 rounded">
+                              <Pencil className="w-3 h-3" />
+                            </button>
                             <button type="button" onClick={() => removeIntermediate(idx)} className="text-red-500 hover:bg-red-50 p-1 rounded">
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -592,7 +635,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                             {st.aperture && <div className="text-[10px] text-slate-500">Pot: {st.aperture}m</div>}
                           </td>
                           <td className="p-2 text-slate-600 italic truncate max-w-[100px]">{st.notes}</td>
-                          <td className="p-2 text-right">
+                          <td className="p-2 text-right flex justify-end gap-1">
+                            <button type="button" onClick={() => handleEditStructure(idx)} className="text-blue-500 hover:bg-blue-50 p-1 rounded">
+                              <Pencil className="w-3 h-3" />
+                            </button>
                             <button type="button" onClick={() => removeStructure(idx)} className="text-red-500 hover:bg-red-50 p-1 rounded">
                               <Trash2 className="w-3 h-3" />
                             </button>

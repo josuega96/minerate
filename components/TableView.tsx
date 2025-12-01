@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Project, Station, Segment, Structure, Subproject, IntermediatePoint } from '../types';
 import { getStations, getSegments, getStructures, getIntermediatePoints, downloadData, exportToCSV } from '../services/db';
@@ -40,15 +41,20 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
 
   const handleExport = () => {
     if (activeTab === 'survey') {
-      // Flatten data to include stations AND intermediate points in order
+      // Flatten data to include stations AND intermediate points in chronological order
+      // Order: Station (Origin) -> Intermediates (Outgoing) -> Next Station
       const data = stations.flatMap(st => {
-        const seg = segments.find(s => s.toStationId === st.id);
-        const fromSt = seg ? stations.find(s => s.id === seg.fromStationId) : null;
+        // Incoming Segment (How we got TO this station) - For Station Row Details
+        const incomingSeg = segments.find(s => s.toStationId === st.id);
+        const fromSt = incomingSeg ? stations.find(s => s.id === incomingSeg.fromStationId) : null;
         
-        // Find intermediates for this segment
-        const segmentIntermediates = seg 
+        // Outgoing Segment (Starting FROM this station) - For Intermediate Points
+        const outgoingSeg = segments.find(s => s.fromStationId === st.id);
+        
+        // Find intermediates for the OUTGOING segment
+        const segmentIntermediates = outgoingSeg 
           ? intermediatePoints
-              .filter(ip => ip.segmentId === seg.id)
+              .filter(ip => ip.segmentId === outgoingSeg.id)
               .sort((a, b) => a.distanceFromStart - b.distanceFromStart)
           : [];
 
@@ -56,12 +62,12 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
         const intRows = segmentIntermediates.map(ip => ({
           ID: `INT-${ip.id}`,
           Estacion: `+ ${ip.distanceFromStart}m`,
-          Desde: fromSt ? fromSt.name : '',
-          Este: '', // Usually interpolated, leaving blank for raw data
+          Desde: st.name, // Measured from current station
+          Este: '', // Interpolated coords not calculated here
           Norte: '',
           Cota: '',
-          Azimut: seg ? seg.azimuth : '', // Inherits segment azimuth
-          Buzamiento: seg ? seg.dip : '',   // Inherits segment dip
+          Azimut: outgoingSeg ? outgoingSeg.azimuth : '', // Inherits azimuth from outgoing segment
+          Buzamiento: outgoingSeg ? outgoingSeg.dip : '',   // Inherits dip from outgoing segment
           Distancia: ip.distanceFromStart,
           Izq: ip.left,
           Der: ip.right,
@@ -71,7 +77,6 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
         }));
 
         // The main station row
-        // Modified: Removed toFixed(3) to preserve full precision
         const stationRow = {
           ID: st.id,
           Estacion: st.name,
@@ -79,17 +84,18 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
           Este: st.easting,
           Norte: st.northing,
           Cota: st.elevation,
-          Azimut: seg ? seg.azimuth : '',
-          Buzamiento: seg ? seg.dip : '',
-          Distancia: seg ? seg.distance : '',
-          Izq: seg ? seg.left : '',
-          Der: seg ? seg.right : '',
-          Techo: seg ? seg.up : '',
-          Piso: seg ? seg.down : '',
+          Azimut: incomingSeg ? incomingSeg.azimuth : '',
+          Buzamiento: incomingSeg ? incomingSeg.dip : '',
+          Distancia: incomingSeg ? incomingSeg.distance : '',
+          Izq: incomingSeg ? incomingSeg.left : '',
+          Der: incomingSeg ? incomingSeg.right : '',
+          Techo: incomingSeg ? incomingSeg.up : '',
+          Piso: incomingSeg ? incomingSeg.down : '',
           Notas: st.notes || ''
         };
 
-        return [...intRows, stationRow];
+        // Station first, then its outgoing Intermediates
+        return [stationRow, ...intRows];
       });
 
       const csv = exportToCSV(data);
@@ -123,29 +129,18 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
     // Find the segment this intermediate belongs to
     const seg = segments.find(s => s.id === intermediate.segmentId);
     if (seg) {
-      // Find the station this segment leads to (The Advance Record)
+      // Find the station this segment leads to (The Advance Record containing this data)
       const station = stations.find(s => s.id === seg.toStationId);
       if (station) onEditStation(station);
     }
   };
 
   const editStructureParent = (structure: Structure) => {
-    // Structure is linked to the START station of a segment.
-    // We need to find the segment that STARTS at structure.stationId to find the Advance Record (Destination Station)
-    // However, a station might have multiple outgoing segments if it's a junction.
-    // But usually in the UI we display structure under the segment that created it.
-    
-    // Simplification: We look for the segment where fromStationId matches the structure's stationId.
-    // NOTE: This might be ambiguous if there are branches. 
-    // Ideally structure should link to the Segment or the creating Station context.
-    // For now, we find the first segment starting here in this subproject context.
     const seg = segments.find(s => s.fromStationId === structure.stationId);
     if (seg) {
       const station = stations.find(s => s.id === seg.toStationId);
       if (station) onEditStation(station);
     } else {
-      // Fallback: If no segment goes out (maybe it's the last station?), check if it IS a station
-      // But structures are usually recorded IN an advance.
       alert("No se encontró el registro de avance asociado a esta estructura.");
     }
   };
@@ -171,132 +166,136 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
       <div className="flex border-b border-slate-200 bg-white">
         <button
           onClick={() => setActiveTab('survey')}
-          className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+          className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'survey' 
               ? 'bg-slate-50 text-orange-700 border-b-2 border-orange-600' 
               : 'text-slate-500 hover:bg-slate-50'
           }`}
         >
-          <Mountain className="w-4 h-4" /> Levantamiento
+          <Mountain className="w-5 h-5" /> Levantamiento
         </button>
         <button
           onClick={() => setActiveTab('geology')}
-          className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+          className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'geology' 
               ? 'bg-slate-50 text-amber-700 border-b-2 border-amber-600' 
               : 'text-slate-500 hover:bg-slate-50'
           }`}
         >
-          <Layers className="w-4 h-4" /> Geología
+          <Layers className="w-5 h-5" /> Geología
         </button>
       </div>
 
       {/* Toolbar */}
-      <div className="p-2 flex justify-end bg-slate-50 border-b border-slate-200">
+      <div className="p-3 flex justify-end bg-slate-50 border-b border-slate-200">
          <button 
            onClick={handleExport}
-           className="bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm hover:bg-slate-100"
+           className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-slate-100 transition-colors"
          >
-           <Download className="w-3.5 h-3.5" /> Exportar esta tabla
+           <Download className="w-4 h-4" /> Exportar esta tabla
          </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto bg-slate-100 p-4">
-        <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left whitespace-nowrap">
+            <table className="w-full text-sm text-left whitespace-nowrap">
               {activeTab === 'survey' ? (
                 <>
-                  <thead className="bg-orange-50 text-orange-900 border-b border-orange-100 uppercase font-bold tracking-wider">
+                  <thead className="bg-orange-50 text-orange-900 border-b border-orange-100 uppercase text-xs font-bold tracking-wider">
                     <tr>
-                      <th className="px-4 py-3 w-10">Acciones</th>
-                      <th className="px-4 py-3">Estación / Punto</th>
-                      <th className="px-4 py-3">Coord. Este</th>
-                      <th className="px-4 py-3">Coord. Norte</th>
-                      <th className="px-4 py-3">Cota (Z)</th>
-                      <th className="px-4 py-3 border-l border-orange-100">Azimut</th>
-                      <th className="px-4 py-3">Buz.</th>
-                      <th className="px-4 py-3">Dist.</th>
-                      <th className="px-4 py-3 border-l border-orange-100">Izq</th>
-                      <th className="px-4 py-3">Der</th>
-                      <th className="px-4 py-3">Techo</th>
-                      <th className="px-4 py-3">Piso</th>
-                      <th className="px-4 py-3 border-l border-orange-100">Notas</th>
+                      <th className="px-6 py-4 w-10">Acciones</th>
+                      <th className="px-6 py-4">Estación / Punto</th>
+                      <th className="px-6 py-4">Coord. Este</th>
+                      <th className="px-6 py-4">Coord. Norte</th>
+                      <th className="px-6 py-4">Cota (Z)</th>
+                      <th className="px-6 py-4 border-l border-orange-100">Azimut</th>
+                      <th className="px-6 py-4">Buz.</th>
+                      <th className="px-6 py-4">Dist.</th>
+                      <th className="px-6 py-4 border-l border-orange-100">Izq</th>
+                      <th className="px-6 py-4">Der</th>
+                      <th className="px-6 py-4">Techo</th>
+                      <th className="px-6 py-4">Piso</th>
+                      <th className="px-6 py-4 border-l border-orange-100">Notas</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {stations.map((st, i) => {
-                      const seg = segments.find(s => s.toStationId === st.id);
-                      const segmentIntermediates = seg 
+                      // Incoming Segment: How we arrived AT this station (shown in station row)
+                      const incomingSeg = segments.find(s => s.toStationId === st.id);
+                      
+                      // Outgoing Segment: How we leave this station (contains Intermediates for next section)
+                      const outgoingSeg = segments.find(s => s.fromStationId === st.id);
+                      
+                      const segmentIntermediates = outgoingSeg 
                         ? intermediatePoints
-                            .filter(ip => ip.segmentId === seg.id)
+                            .filter(ip => ip.segmentId === outgoingSeg.id)
                             .sort((a, b) => a.distanceFromStart - b.distanceFromStart)
                         : [];
 
                       return (
                         <React.Fragment key={st.id}>
-                          {/* Render Intermediate Points First */}
+                          {/* Render Station Row FIRST */}
+                          <tr className="hover:bg-slate-50 border-t border-slate-100 transition-colors">
+                            <td className="px-6 py-4">
+                                <button onClick={() => onEditStation(st)} className="text-slate-400 hover:text-orange-600 p-2 rounded hover:bg-slate-200">
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-slate-800 text-base">
+                              {st.name} 
+                              {st.isOrigin && <span className="ml-2 text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded uppercase tracking-wider">ORIGEN</span>}
+                            </td>
+                            <td className="px-6 py-4 font-mono text-slate-700">{st.easting}</td>
+                            <td className="px-6 py-4 font-mono text-slate-700">{st.northing}</td>
+                            <td className="px-6 py-4 font-mono text-slate-700">{st.elevation}</td>
+                            
+                            {/* Segment Data (Incoming) */}
+                            <td className="px-6 py-4 border-l border-slate-100 text-slate-700">{incomingSeg ? incomingSeg.azimuth + '°' : '-'}</td>
+                            <td className="px-6 py-4 text-slate-700">{incomingSeg ? incomingSeg.dip : '-'}</td>
+                            <td className="px-6 py-4 font-bold text-slate-900">{incomingSeg ? incomingSeg.distance + 'm' : '-'}</td>
+                            
+                            {/* Dims (Incoming) */}
+                            <td className="px-6 py-4 border-l border-slate-100 text-slate-600">{incomingSeg ? incomingSeg.left : '-'}</td>
+                            <td className="px-6 py-4 text-slate-600">{incomingSeg ? incomingSeg.right : '-'}</td>
+                            <td className="px-6 py-4 text-slate-600">{incomingSeg ? incomingSeg.up : '-'}</td>
+                            <td className="px-6 py-4 text-slate-600">{incomingSeg ? incomingSeg.down : '-'}</td>
+                            
+                            <td className="px-6 py-4 border-l border-slate-100 italic text-slate-400 max-w-[250px] truncate">
+                              {st.notes}
+                            </td>
+                          </tr>
+
+                          {/* Render Intermediate Points (Outgoing from this station) */}
                           {segmentIntermediates.map(ip => (
                             <tr key={`int-${ip.id}`} className="bg-slate-50/50 text-slate-500 italic">
-                               <td className="px-4 py-2">
-                                  <button onClick={() => editIntermediateParent(ip)} className="text-slate-400 hover:text-orange-600 p-1">
-                                    <Pencil className="w-3.5 h-3.5" />
+                               <td className="px-6 py-3">
+                                  <button onClick={() => editIntermediateParent(ip)} className="text-slate-400 hover:text-orange-600 p-2 rounded hover:bg-slate-200">
+                                    <Pencil className="w-4 h-4" />
                                   </button>
                                </td>
-                               <td className="px-4 py-2 pl-8 flex items-center gap-1">
-                                 <CornerDownRight className="w-3 h-3 opacity-50" />
+                               <td className="px-6 py-3 pl-10 flex items-center gap-2">
+                                 <CornerDownRight className="w-4 h-4 opacity-50" />
                                  <span>+ {ip.distanceFromStart}m</span>
                                </td>
-                               <td className="px-4 py-2">-</td>
-                               <td className="px-4 py-2">-</td>
-                               <td className="px-4 py-2">-</td>
-                               {/* Inherited Vector Data */}
-                               <td className="px-4 py-2 border-l border-slate-100 opacity-50">{seg?.azimuth}°</td>
-                               <td className="px-4 py-2 opacity-50">{seg?.dip}</td>
-                               <td className="px-4 py-2 font-mono">{ip.distanceFromStart}</td>
+                               <td className="px-6 py-3">-</td>
+                               <td className="px-6 py-3">-</td>
+                               <td className="px-6 py-3">-</td>
+                               {/* Vector Data (Outgoing) */}
+                               <td className="px-6 py-3 border-l border-slate-100 opacity-50">{outgoingSeg?.azimuth}°</td>
+                               <td className="px-6 py-3 opacity-50">{outgoingSeg?.dip}</td>
+                               <td className="px-6 py-3 font-mono text-slate-400">{ip.distanceFromStart}</td>
                                {/* Dimensions */}
-                               <td className="px-4 py-2 border-l border-slate-100 font-mono">{ip.left}</td>
-                               <td className="px-4 py-2 font-mono">{ip.right}</td>
-                               <td className="px-4 py-2 font-mono">{ip.up}</td>
-                               <td className="px-4 py-2 font-mono">{ip.down}</td>
-                               <td className="px-4 py-2 border-l border-slate-100 max-w-[150px] truncate text-slate-400">
+                               <td className="px-6 py-3 border-l border-slate-100 font-mono">{ip.left}</td>
+                               <td className="px-6 py-3 font-mono">{ip.right}</td>
+                               <td className="px-6 py-3 font-mono">{ip.up}</td>
+                               <td className="px-6 py-3 font-mono">{ip.down}</td>
+                               <td className="px-6 py-3 border-l border-slate-100 max-w-[200px] truncate text-slate-400">
                                  {ip.notes}
                                </td>
                             </tr>
                           ))}
-
-                          {/* Render Station Row */}
-                          <tr className="hover:bg-slate-50 border-t border-slate-100">
-                            <td className="px-4 py-2">
-                                <button onClick={() => onEditStation(st)} className="text-slate-400 hover:text-orange-600 p-1">
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
-                            </td>
-                            <td className="px-4 py-2 font-bold text-slate-800">
-                              {st.name} 
-                              {st.isOrigin && <span className="ml-2 text-[9px] bg-slate-800 text-white px-1 rounded">ORIGEN</span>}
-                            </td>
-                            {/* Modified: Removed toFixed(3) */}
-                            <td className="px-4 py-2 font-mono text-slate-600">{st.easting}</td>
-                            <td className="px-4 py-2 font-mono text-slate-600">{st.northing}</td>
-                            <td className="px-4 py-2 font-mono text-slate-600">{st.elevation}</td>
-                            
-                            {/* Segment Data */}
-                            <td className="px-4 py-2 border-l border-slate-100">{seg ? seg.azimuth + '°' : '-'}</td>
-                            <td className="px-4 py-2">{seg ? seg.dip : '-'}</td>
-                            <td className="px-4 py-2 font-bold">{seg ? seg.distance + 'm' : '-'}</td>
-                            
-                            {/* Dims */}
-                            <td className="px-4 py-2 border-l border-slate-100">{seg ? seg.left : '-'}</td>
-                            <td className="px-4 py-2">{seg ? seg.right : '-'}</td>
-                            <td className="px-4 py-2">{seg ? seg.up : '-'}</td>
-                            <td className="px-4 py-2">{seg ? seg.down : '-'}</td>
-                            
-                            <td className="px-4 py-2 border-l border-slate-100 italic text-slate-400 max-w-[150px] truncate">
-                              {st.notes}
-                            </td>
-                          </tr>
                         </React.Fragment>
                       );
                     })}
@@ -304,45 +303,47 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                 </>
               ) : (
                 <>
-                  <thead className="bg-amber-50 text-amber-900 border-b border-amber-100 uppercase font-bold tracking-wider">
+                  <thead className="bg-amber-50 text-amber-900 border-b border-amber-100 uppercase text-xs font-bold tracking-wider">
                     <tr>
-                      <th className="px-4 py-3 w-10">Acciones</th>
-                      <th className="px-4 py-3">Ref. Estación</th>
-                      <th className="px-4 py-3">Dist. desde Ref.</th>
-                      <th className="px-4 py-3">Tipo</th>
-                      <th className="px-4 py-3">Rumbo (Strike)</th>
-                      <th className="px-4 py-3">Buz. (Dip)</th>
-                      <th className="px-4 py-3">Potencia</th>
-                      <th className="px-4 py-3">Ubicación</th>
-                      <th className="px-4 py-3">Notas</th>
+                      <th className="px-6 py-4 w-10">Acciones</th>
+                      <th className="px-6 py-4">Ref. Estación</th>
+                      <th className="px-6 py-4">Dist. desde Ref.</th>
+                      <th className="px-6 py-4">Tipo</th>
+                      <th className="px-6 py-4">Rumbo (Strike)</th>
+                      <th className="px-6 py-4">Buz. (Dip)</th>
+                      <th className="px-6 py-4">Potencia</th>
+                      <th className="px-6 py-4">Ubicación</th>
+                      <th className="px-6 py-4">Notas</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {structures.length === 0 ? (
-                       <tr><td colSpan={9} className="p-8 text-center text-slate-400 italic">No hay estructuras registradas</td></tr>
+                       <tr><td colSpan={9} className="p-8 text-center text-slate-400 italic text-sm">No hay estructuras registradas</td></tr>
                     ) : (
                       structures.map((str, i) => {
                         const st = stations.find(s => s.id === str.stationId);
                         const locationMap: Record<string, string> = { left: 'Izq', right: 'Der', up: 'Techo', down: 'Piso' };
                         const locs = str.location?.map(l => locationMap[l]).join(', ') || '-';
                         return (
-                          <tr key={str.id} className="hover:bg-amber-50/30">
-                            <td className="px-4 py-2">
-                                <button onClick={() => editStructureParent(str)} className="text-slate-400 hover:text-amber-600 p-1">
-                                  <Pencil className="w-3.5 h-3.5" />
+                          <tr key={str.id} className="hover:bg-amber-50/30 transition-colors">
+                            <td className="px-6 py-4">
+                                <button onClick={() => editStructureParent(str)} className="text-slate-400 hover:text-amber-600 p-2 rounded hover:bg-slate-200">
+                                  <Pencil className="w-4 h-4" />
                                 </button>
                             </td>
-                            <td className="px-4 py-2 font-bold text-slate-800">{st ? st.name : 'Desconocido'}</td>
-                            <td className="px-4 py-2 font-mono text-slate-600">{str.distanceFromStart} m</td>
-                            <td className="px-4 py-2 uppercase font-bold text-amber-700 bg-amber-50 inline-block m-1 rounded px-2 text-[10px]">
-                              {str.type}
-                              {str.otherType && <span className="normal-case text-amber-600">: {str.otherType}</span>}
+                            <td className="px-6 py-4 font-bold text-slate-800 text-base">{st ? st.name : 'Desconocido'}</td>
+                            <td className="px-6 py-4 font-mono text-slate-700">{str.distanceFromStart} m</td>
+                            <td className="px-6 py-4">
+                               <span className="uppercase font-bold text-amber-700 bg-amber-100 rounded px-2 py-0.5 text-xs tracking-wide">
+                                {str.type}
+                               </span>
+                               {str.otherType && <span className="block mt-1 text-sm text-amber-900 font-medium">{str.otherType}</span>}
                             </td>
-                            <td className="px-4 py-2">{str.strike}°</td>
-                            <td className="px-4 py-2">{str.dip}</td>
-                            <td className="px-4 py-2">{str.aperture ? str.aperture + ' m' : '-'}</td>
-                            <td className="px-4 py-2 text-slate-500 text-[10px]">{locs}</td>
-                            <td className="px-4 py-2 italic text-slate-400 max-w-[200px] truncate">{str.notes}</td>
+                            <td className="px-6 py-4 text-slate-700">{str.strike}°</td>
+                            <td className="px-6 py-4 text-slate-700">{str.dip}</td>
+                            <td className="px-6 py-4 text-slate-700">{str.aperture ? str.aperture + ' m' : '-'}</td>
+                            <td className="px-6 py-4 text-slate-600 text-xs font-medium">{locs}</td>
+                            <td className="px-6 py-4 italic text-slate-500 max-w-[250px] truncate">{str.notes}</td>
                           </tr>
                         );
                       })
