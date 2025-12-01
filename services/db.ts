@@ -31,6 +31,7 @@ export const db = new GeoDatabase();
 // Projects
 export const getProjects = () => db.projects.orderBy('createdAt').reverse().toArray();
 export const createProject = (p: Project) => db.projects.add({ ...p, synced: false, updatedAt: Date.now() });
+export const updateProject = (id: number, data: Partial<Project>) => db.projects.update(id, { ...data, updatedAt: Date.now(), synced: false });
 export const deleteProject = async (id: number) => {
   await (db as any).transaction('rw', db.projects, db.subprojects, db.stations, db.segments, db.structures, db.intermediatePoints, async () => {
     await db.subprojects.where('projectId').equals(id).delete();
@@ -45,6 +46,7 @@ export const deleteProject = async (id: number) => {
 // Subprojects
 export const getSubprojects = (projectId: number) => db.subprojects.where('projectId').equals(projectId).toArray();
 export const createSubproject = (sp: Subproject) => db.subprojects.add({ ...sp, synced: false, updatedAt: Date.now() });
+export const updateSubproject = (id: number, data: Partial<Subproject>) => db.subprojects.update(id, { ...data, updatedAt: Date.now(), synced: false });
 
 // Stations
 export const getStations = (projectId: number, subprojectId?: number | null) => {

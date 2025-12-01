@@ -6,7 +6,7 @@ import Forms from './components/Forms';
 import SketchView from './components/SketchView';
 import TableView from './components/TableView';
 import { Project, Station, Segment, Structure, IntermediatePoint, ViewMode, Subproject } from './types';
-import { saveStationAndSegment, updateStationAndSegment, getSegments, getIntermediatePoints, getStructures, db, createSubproject, getSubprojects } from './services/db';
+import { saveStationAndSegment, updateStationAndSegment, getSegments, getIntermediatePoints, getStructures, db, createSubproject, getSubprojects, updateProject, updateSubproject } from './services/db';
 import { syncService } from './services/sync';
 import { Cloud, CloudOff, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -84,6 +84,21 @@ const App: React.FC = () => {
 
     // 3. Select it
     setActiveSubproject(newSubproject);
+    triggerSyncCheck();
+  };
+
+  const handleRenameContext = async (newName: string) => {
+    if (!activeProject) return;
+
+    if (activeSubproject) {
+      // Rename Subproject
+      await updateSubproject(activeSubproject.id!, { name: newName });
+      setActiveSubproject({ ...activeSubproject, name: newName });
+    } else {
+      // Rename Root Project Context (Labor Principal)
+      await updateProject(activeProject.id!, { rootSectorName: newName });
+      setActiveProject({ ...activeProject, rootSectorName: newName });
+    }
     triggerSyncCheck();
   };
 
@@ -188,16 +203,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-stone-100 overflow-hidden flex justify-center">
-      <div className="w-full max-w-md h-full bg-white shadow-2xl relative flex flex-col">
+    <div className="h-screen w-full bg-slate-100 overflow-hidden flex justify-center">
+      <div className="w-full max-w-md h-full bg-slate-50 shadow-2xl relative flex flex-col border-x border-slate-200">
         
         {/* Sync Status Bar */}
         <div className={`
           px-4 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider transition-colors
-          ${syncStatus === 'offline' ? 'bg-stone-800 text-stone-300' : 
+          ${syncStatus === 'offline' ? 'bg-slate-800 text-slate-300' : 
             syncStatus === 'error' ? 'bg-red-600 text-white' :
             syncStatus === 'syncing' ? 'bg-blue-600 text-white' :
-            pendingUploads > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'}
+            pendingUploads > 0 ? 'bg-amber-500 text-white' : 'bg-slate-700 text-blue-400'}
         `}>
           <div className="flex items-center gap-2">
             {syncStatus === 'offline' && <><CloudOff className="w-3 h-3" /> Sin Conexión</>}
@@ -225,6 +240,7 @@ const App: React.FC = () => {
               activeSubproject={activeSubproject}
               onSelectSubproject={handleSelectSubproject}
               onCreateSubproject={handleCreateSubproject}
+              onRenameContext={handleRenameContext}
               onBack={() => setCurrentView('home')}
               onAddStation={handleAddStation}
               onAddStructure={() => {}} 

@@ -2,6 +2,7 @@
 export interface Project {
   id?: number;
   name: string;
+  rootSectorName?: string; // New: Custom name for "Labor Principal"
   type: 'underground' | 'surface';
   operator: string;
   shift?: string;
@@ -23,7 +24,7 @@ export interface Subproject {
 export interface Station {
   id?: number;
   projectId: number;
-  subprojectId?: number; // New: Link to a specific gallery/sector
+  subprojectId?: number; // Link to a specific gallery/sector
   name: string;
   easting: number;
   northing: number;

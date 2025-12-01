@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Project, Station, Segment, Structure, IntermediatePoint } from '../types';
 import { ArrowRight, Save, X, Compass, Ruler, Calculator, AlertTriangle, Plus, Trash2, List, Layers, Pencil, BoxSelect } from 'lucide-react';
@@ -259,16 +258,16 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Header */}
-      <div className={`p-4 border-b border-stone-200 flex justify-between items-center ${isEditing ? 'bg-amber-50' : 'bg-stone-50'}`}>
-        <h2 className="font-bold text-lg text-stone-800 flex items-center gap-2">
-          {isEditing && <Pencil className="w-5 h-5 text-amber-600" />}
+      <div className={`p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm z-10`}>
+        <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+          {isEditing && <Pencil className="w-5 h-5 text-orange-600" />}
           {type === 'station_origin' && (isEditing ? "Editar Punto de Inicio" : "Definir Punto de Inicio")}
           {type === 'advance' && (isEditing ? "Editar Registro de Avance" : "Registrar Avance")}
         </h2>
-        <button onClick={onCancel} className="bg-stone-200 p-2 rounded-full hover:bg-stone-300">
-          <X className="w-5 h-5 text-stone-600" />
+        <button onClick={onCancel} className="bg-slate-100 p-2 rounded-full hover:bg-slate-200">
+          <X className="w-5 h-5 text-slate-600" />
         </button>
       </div>
 
@@ -285,9 +284,9 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
               <InputGroup label="Cota (Z)" name="elevation" type="number" step="any" value={originData.elevation} onChange={e => setOriginData({...originData, elevation: e.target.value})} required />
             </div>
             <div className="pt-2">
-              <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Notas</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notas</label>
               <textarea 
-                className="w-full bg-white border border-stone-300 rounded-lg p-3 text-stone-900 font-medium focus:ring-emerald-500 focus:border-emerald-500" 
+                className="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-900 font-medium focus:ring-orange-500 focus:border-orange-500" 
                 rows={3} 
                 value={originData.notes} 
                 onChange={e => setOriginData({...originData, notes: e.target.value})} 
@@ -300,18 +299,18 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
         {type === 'advance' && (
           <div className="space-y-6">
             {/* Header: From -> To */}
-            <div className={`flex items-center gap-4 p-4 rounded-xl border ${isEditing ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-100'}`}>
+            <div className={`flex items-center gap-4 p-4 rounded-xl border bg-white ${isEditing ? 'border-orange-200' : 'border-slate-200'}`}>
               <div className="text-center">
-                <div className={`text-xs font-bold uppercase ${isEditing ? 'text-amber-500' : 'text-emerald-500'}`}>Desde</div>
-                <div className={`font-bold text-xl ${isEditing ? 'text-amber-700' : 'text-emerald-700'}`}>
+                <div className={`text-xs font-bold uppercase text-slate-400`}>Desde</div>
+                <div className={`font-black text-xl text-slate-700`}>
                   {isEditing && initialData?.baseStation ? initialData.baseStation.name : baseStation?.name}
                 </div>
               </div>
-              <ArrowRight className={isEditing ? 'text-amber-300' : 'text-emerald-300'} />
+              <ArrowRight className="text-slate-300" />
               <div className="flex-1">
-                <label className={`block text-xs font-bold uppercase mb-1 ${isEditing ? 'text-amber-500' : 'text-emerald-500'}`}>Hacia (Destino)</label>
+                <label className={`block text-xs font-bold uppercase mb-1 text-orange-600`}>Hacia (Destino)</label>
                 <input 
-                  className={`w-full bg-white border rounded-lg px-2 py-1 font-bold text-lg focus:ring-2 ${isEditing ? 'border-amber-200 text-amber-700 focus:ring-amber-500 focus:border-amber-500' : 'border-emerald-200 text-emerald-700 focus:ring-emerald-500 focus:border-emerald-500'}`}
+                  className={`w-full bg-white border rounded-lg px-2 py-1 font-bold text-lg focus:ring-2 border-orange-200 text-orange-700 focus:ring-orange-500 focus:border-orange-500`}
                   value={advanceData.nextName}
                   onChange={e => setAdvanceData({...advanceData, nextName: e.target.value})}
                   required
@@ -321,8 +320,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
             {/* Section 1: Compass Readings */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wide flex items-center gap-2 border-b border-stone-100 pb-2">
-                <Compass className="w-4 h-4" /> Lecturas Brújula
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+                <Compass className="w-4 h-4 text-slate-500" /> Lecturas Brújula
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-1">
@@ -335,60 +334,60 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
             </div>
 
             {/* Section 2: Intermediate Points */}
-            <div className="space-y-4 bg-stone-50 p-4 rounded-xl border border-stone-200">
-              <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wide flex items-center gap-2">
-                <List className="w-4 h-4" /> Puntos Intermedios
+            <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <List className="w-4 h-4 text-slate-500" /> Puntos Intermedios
               </h3>
-              <p className="text-xs text-stone-500">Agrega detalles de paredes o radiaciones.</p>
+              <p className="text-xs text-slate-500">Agrega detalles de paredes o radiaciones.</p>
 
               {/* Input for new intermediate */}
               <div className="flex flex-col gap-3">
                  <div className="grid grid-cols-5 gap-2">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Dist.</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Dist.</label>
                       <input 
                         type="number" step="any" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" 
                         value={tempIntermediate.dist} 
                         onChange={e => setTempIntermediate({...tempIntermediate, dist: e.target.value})} 
                         placeholder="m" 
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Izq</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Izq</label>
                       <input 
                         type="number" step="any" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" 
                         value={tempIntermediate.left} 
                         onChange={e => setTempIntermediate({...tempIntermediate, left: e.target.value})} 
                         placeholder="L" 
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Der</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Der</label>
                       <input 
                         type="number" step="any" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" 
                         value={tempIntermediate.right} 
                         onChange={e => setTempIntermediate({...tempIntermediate, right: e.target.value})} 
                         placeholder="R" 
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Techo</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Techo</label>
                       <input 
                         type="number" step="any" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" 
                         value={tempIntermediate.up} 
                         onChange={e => setTempIntermediate({...tempIntermediate, up: e.target.value})} 
                         placeholder="T" 
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-stone-500 block mb-1">Piso</label>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Piso</label>
                       <input 
                         type="number" step="any" 
-                        className="w-full p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-bold focus:ring-emerald-500 focus:border-emerald-500" 
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-bold focus:ring-orange-500 focus:border-orange-500" 
                         value={tempIntermediate.down} 
                         onChange={e => setTempIntermediate({...tempIntermediate, down: e.target.value})} 
                         placeholder="P" 
@@ -399,7 +398,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <div className="flex gap-2">
                     <input 
                       type="text" 
-                      className="flex-1 p-2 bg-white border border-stone-300 rounded-lg text-sm text-stone-900 font-medium focus:ring-emerald-500 focus:border-emerald-500"
+                      className="flex-1 p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-medium focus:ring-orange-500 focus:border-orange-500"
                       placeholder="Descripción / Nota..."
                       value={tempIntermediate.notes}
                       onChange={e => setTempIntermediate({...tempIntermediate, notes: e.target.value})}
@@ -408,7 +407,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                       type="button" 
                       onClick={handleAddIntermediate}
                       disabled={!tempIntermediate.dist}
-                      className="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50 hover:bg-stone-900 flex items-center gap-2 whitespace-nowrap"
+                      className="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50 hover:bg-slate-900 flex items-center gap-2 whitespace-nowrap"
                     >
                       <Plus className="w-4 h-4"/> Agregar
                     </button>
@@ -417,9 +416,9 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
               {/* List of intermediates */}
               {intermediates.length > 0 && (
-                <div className="mt-2 bg-white rounded-lg border border-stone-200 overflow-hidden">
+                <div className="mt-2 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-stone-100 text-stone-500 font-semibold">
+                    <thead className="bg-slate-100 text-slate-500 font-semibold">
                       <tr>
                         <th className="p-2">Dist.</th>
                         <th className="p-2">Dimensiones</th>
@@ -427,18 +426,18 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                         <th className="p-2 text-right"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-slate-200">
                       {intermediates.map((pt, idx) => (
                         <tr key={idx}>
-                          <td className="p-2 font-bold text-stone-700">{pt.distanceFromStart}m</td>
-                          <td className="p-2 text-stone-600">
+                          <td className="p-2 font-bold text-slate-700">{pt.distanceFromStart}m</td>
+                          <td className="p-2 text-slate-600">
                             <div className="flex gap-2">
                                <span>L:{pt.left} R:{pt.right}</span>
-                               <span className="text-stone-400">|</span>
+                               <span className="text-slate-400">|</span>
                                <span>T:{pt.up} P:{pt.down}</span>
                             </div>
                           </td>
-                          <td className="p-2 text-stone-500 italic truncate max-w-[80px]">{pt.notes}</td>
+                          <td className="p-2 text-slate-500 italic truncate max-w-[80px]">{pt.notes}</td>
                           <td className="p-2 text-right">
                             <button type="button" onClick={() => removeIntermediate(idx)} className="text-red-500 hover:bg-red-50 p-1 rounded">
                               <Trash2 className="w-3 h-3" />
@@ -462,7 +461,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                  <div className="grid grid-cols-2 gap-2">
                     <div className="col-span-2">
                        <select 
-                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full bg-white border border-amber-200 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500"
                         value={tempStructure.type}
                         onChange={e => setTempStructure({...tempStructure, type: e.target.value as any})}
                       >
@@ -479,7 +478,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
                       <input
                         type="text"
-                        className="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500 placeholder-amber-400"
+                        className="w-full bg-white border border-amber-300 rounded-lg p-2 text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500 placeholder-amber-400"
                         placeholder="Nombre / Detalle (Ej. Falla Principal)"
                         value={tempStructure.otherType || ''}
                         onChange={e => setTempStructure({...tempStructure, otherType: e.target.value})}
@@ -487,7 +486,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     </div>
 
                     <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Rumbo" value={tempStructure.strike === undefined ? '' : tempStructure.strike} onChange={e => setTempStructure({...tempStructure, strike: parseFloat(e.target.value)})} />
                     </div>
                     <div>
                       {/* Split Dip Input: Angle + Direction */}
@@ -495,13 +494,13 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                          <input 
                            type="number"
                            step="any"
-                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
+                           className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500 min-w-0" 
                            placeholder="Az" 
                            value={structDipAngle} 
                            onChange={e => setStructDipAngle(e.target.value)} 
                          />
                          <select 
-                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500"
+                           className="w-16 p-0 px-1 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500"
                            value={structDipDir}
                            onChange={e => setStructDipDir(e.target.value)}
                          >
@@ -513,10 +512,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                       </div>
                     </div>
                     <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Distancia (m)" value={tempStructure.distanceFromStart === undefined ? '' : tempStructure.distanceFromStart} onChange={e => setTempStructure({...tempStructure, distanceFromStart: parseFloat(e.target.value)})} />
                     </div>
                      <div>
-                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
+                      <input type="number" step="any" className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-bold focus:ring-amber-500 focus:border-amber-500" placeholder="Potencia (m)" value={tempStructure.aperture === undefined ? '' : tempStructure.aperture} onChange={e => setTempStructure({...tempStructure, aperture: parseFloat(e.target.value)})} />
                     </div>
 
                     {/* New Location Selector */}
@@ -544,7 +543,7 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
                     <div className="col-span-2">
                        <input 
                         type="text" 
-                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-stone-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-sm text-slate-900 font-medium focus:ring-amber-500 focus:border-amber-500" 
                         placeholder="Notas / Observaciones de la estructura..." 
                         value={tempStructure.notes || ''} 
                         onChange={e => setTempStructure({...tempStructure, notes: e.target.value})} 
@@ -607,8 +606,8 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
 
             {/* Section 4: Final Profile */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wide flex items-center gap-2 border-b border-stone-100 pb-2">
-                <Ruler className="w-4 h-4" /> Perfil Final (Estación {advanceData.nextName})
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+                <Ruler className="w-4 h-4 text-slate-500" /> Perfil Final (Estación {advanceData.nextName})
               </h3>
               
               <div className="mb-2">
@@ -627,10 +626,10 @@ const Forms: React.FC<FormsProps> = ({ type, project, baseStation, initialData, 
       </form>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-stone-200 bg-white absolute bottom-0 w-full z-10 safe-area-bottom">
+      <div className="p-4 border-t border-slate-200 bg-white absolute bottom-0 w-full z-10 safe-area-bottom shadow-lg">
         <button 
           onClick={handleSubmit}
-          className={`w-full text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-colors ${isEditing ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' : 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-100'}`}
+          className={`w-full text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-colors ${isEditing ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-200'}`}
         >
           {isEditing ? <><Save className="w-5 h-5" /> Actualizar Datos</> : <><Save className="w-5 h-5" /> Guardar Datos</>}
         </button>

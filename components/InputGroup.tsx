@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface InputGroupProps {
@@ -18,8 +17,8 @@ export const InputGroup: React.FC<InputGroupProps> = ({
 }) => {
   return (
     <div className="mb-3">
-      <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+        {label} {required && <span className="text-orange-600">*</span>}
       </label>
       <div className="relative">
         <input
@@ -30,10 +29,10 @@ export const InputGroup: React.FC<InputGroupProps> = ({
           required={required}
           step={step}
           placeholder={placeholder}
-          className="w-full bg-white border border-stone-300 text-stone-900 font-bold text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-3 shadow-sm transition-colors placeholder:text-stone-300 placeholder:font-normal"
+          className="w-full bg-white border border-slate-300 text-slate-900 font-bold text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-3 shadow-sm transition-colors placeholder:text-slate-300 placeholder:font-normal"
         />
         {icon && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-stone-400">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
             {icon}
           </div>
         )}

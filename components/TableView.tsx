@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Project, Station, Segment, Structure, Subproject, IntermediatePoint } from '../types';
 import { getStations, getSegments, getStructures, getIntermediatePoints, downloadData, exportToCSV } from '../services/db';
@@ -152,30 +151,30 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
   };
 
   return (
-    <div className="flex flex-col h-full bg-white animate-in slide-in-from-bottom-4">
+    <div className="flex flex-col h-full bg-slate-50 animate-in slide-in-from-bottom-4">
       {/* Header */}
-      <div className="p-4 bg-stone-900 text-white flex justify-between items-center shadow-md z-10">
+      <div className="p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-10">
         <div>
           <h2 className="font-bold text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-emerald-400" /> Tabla Resumen
+            <FileText className="w-5 h-5 text-orange-400" /> Tabla Resumen
           </h2>
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-slate-400">
             {project.name} {activeSubproject ? `• ${activeSubproject.name}` : ''}
           </p>
         </div>
-        <button onClick={onClose} className="bg-stone-800 p-2 rounded-full hover:bg-stone-700 transition-colors">
+        <button onClick={onClose} className="bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </button>
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex border-b border-stone-200 bg-stone-50">
+      <div className="flex border-b border-slate-200 bg-white">
         <button
           onClick={() => setActiveTab('survey')}
           className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'survey' 
-              ? 'bg-white text-emerald-700 border-b-2 border-emerald-600' 
-              : 'text-stone-500 hover:bg-stone-100'
+              ? 'bg-slate-50 text-orange-700 border-b-2 border-orange-600' 
+              : 'text-slate-500 hover:bg-slate-50'
           }`}
         >
           <Mountain className="w-4 h-4" /> Levantamiento
@@ -184,8 +183,8 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
           onClick={() => setActiveTab('geology')}
           className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
             activeTab === 'geology' 
-              ? 'bg-white text-amber-700 border-b-2 border-amber-600' 
-              : 'text-stone-500 hover:bg-stone-100'
+              ? 'bg-slate-50 text-amber-700 border-b-2 border-amber-600' 
+              : 'text-slate-500 hover:bg-slate-50'
           }`}
         >
           <Layers className="w-4 h-4" /> Geología
@@ -193,40 +192,40 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
       </div>
 
       {/* Toolbar */}
-      <div className="p-2 flex justify-end bg-stone-50 border-b border-stone-200">
+      <div className="p-2 flex justify-end bg-slate-50 border-b border-slate-200">
          <button 
            onClick={handleExport}
-           className="bg-white border border-stone-300 text-stone-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm hover:bg-stone-100"
+           className="bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm hover:bg-slate-100"
          >
            <Download className="w-3.5 h-3.5" /> Exportar esta tabla
          </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto bg-stone-50 p-4">
-        <div className="bg-white rounded-lg shadow border border-stone-200 overflow-hidden">
+      <div className="flex-1 overflow-auto bg-slate-100 p-4">
+        <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left whitespace-nowrap">
               {activeTab === 'survey' ? (
                 <>
-                  <thead className="bg-emerald-50 text-emerald-900 border-b border-emerald-100 uppercase font-bold tracking-wider">
+                  <thead className="bg-orange-50 text-orange-900 border-b border-orange-100 uppercase font-bold tracking-wider">
                     <tr>
                       <th className="px-4 py-3 w-10">Acciones</th>
                       <th className="px-4 py-3">Estación / Punto</th>
                       <th className="px-4 py-3">Coord. Este</th>
                       <th className="px-4 py-3">Coord. Norte</th>
                       <th className="px-4 py-3">Cota (Z)</th>
-                      <th className="px-4 py-3 border-l border-emerald-100">Azimut</th>
+                      <th className="px-4 py-3 border-l border-orange-100">Azimut</th>
                       <th className="px-4 py-3">Buz.</th>
                       <th className="px-4 py-3">Dist.</th>
-                      <th className="px-4 py-3 border-l border-emerald-100">Izq</th>
+                      <th className="px-4 py-3 border-l border-orange-100">Izq</th>
                       <th className="px-4 py-3">Der</th>
                       <th className="px-4 py-3">Techo</th>
                       <th className="px-4 py-3">Piso</th>
-                      <th className="px-4 py-3 border-l border-emerald-100">Notas</th>
+                      <th className="px-4 py-3 border-l border-orange-100">Notas</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-slate-100">
                     {stations.map((st, i) => {
                       const seg = segments.find(s => s.toStationId === st.id);
                       const segmentIntermediates = seg 
@@ -239,9 +238,9 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                         <React.Fragment key={st.id}>
                           {/* Render Intermediate Points First */}
                           {segmentIntermediates.map(ip => (
-                            <tr key={`int-${ip.id}`} className="bg-stone-50/50 text-stone-500 italic">
+                            <tr key={`int-${ip.id}`} className="bg-slate-50/50 text-slate-500 italic">
                                <td className="px-4 py-2">
-                                  <button onClick={() => editIntermediateParent(ip)} className="text-stone-400 hover:text-emerald-600 p-1">
+                                  <button onClick={() => editIntermediateParent(ip)} className="text-slate-400 hover:text-orange-600 p-1">
                                     <Pencil className="w-3.5 h-3.5" />
                                   </button>
                                </td>
@@ -253,48 +252,48 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                                <td className="px-4 py-2">-</td>
                                <td className="px-4 py-2">-</td>
                                {/* Inherited Vector Data */}
-                               <td className="px-4 py-2 border-l border-stone-100 opacity-50">{seg?.azimuth}°</td>
+                               <td className="px-4 py-2 border-l border-slate-100 opacity-50">{seg?.azimuth}°</td>
                                <td className="px-4 py-2 opacity-50">{seg?.dip}</td>
                                <td className="px-4 py-2 font-mono">{ip.distanceFromStart}</td>
                                {/* Dimensions */}
-                               <td className="px-4 py-2 border-l border-stone-100 font-mono">{ip.left}</td>
+                               <td className="px-4 py-2 border-l border-slate-100 font-mono">{ip.left}</td>
                                <td className="px-4 py-2 font-mono">{ip.right}</td>
                                <td className="px-4 py-2 font-mono">{ip.up}</td>
                                <td className="px-4 py-2 font-mono">{ip.down}</td>
-                               <td className="px-4 py-2 border-l border-stone-100 max-w-[150px] truncate text-stone-400">
+                               <td className="px-4 py-2 border-l border-slate-100 max-w-[150px] truncate text-slate-400">
                                  {ip.notes}
                                </td>
                             </tr>
                           ))}
 
                           {/* Render Station Row */}
-                          <tr className="hover:bg-stone-50 border-t border-stone-100">
+                          <tr className="hover:bg-slate-50 border-t border-slate-100">
                             <td className="px-4 py-2">
-                                <button onClick={() => onEditStation(st)} className="text-stone-400 hover:text-emerald-600 p-1">
+                                <button onClick={() => onEditStation(st)} className="text-slate-400 hover:text-orange-600 p-1">
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
                             </td>
-                            <td className="px-4 py-2 font-bold text-stone-800">
+                            <td className="px-4 py-2 font-bold text-slate-800">
                               {st.name} 
-                              {st.isOrigin && <span className="ml-2 text-[9px] bg-stone-800 text-white px-1 rounded">ORIGEN</span>}
+                              {st.isOrigin && <span className="ml-2 text-[9px] bg-slate-800 text-white px-1 rounded">ORIGEN</span>}
                             </td>
                             {/* Modified: Removed toFixed(3) */}
-                            <td className="px-4 py-2 font-mono text-stone-600">{st.easting}</td>
-                            <td className="px-4 py-2 font-mono text-stone-600">{st.northing}</td>
-                            <td className="px-4 py-2 font-mono text-stone-600">{st.elevation}</td>
+                            <td className="px-4 py-2 font-mono text-slate-600">{st.easting}</td>
+                            <td className="px-4 py-2 font-mono text-slate-600">{st.northing}</td>
+                            <td className="px-4 py-2 font-mono text-slate-600">{st.elevation}</td>
                             
                             {/* Segment Data */}
-                            <td className="px-4 py-2 border-l border-stone-100">{seg ? seg.azimuth + '°' : '-'}</td>
+                            <td className="px-4 py-2 border-l border-slate-100">{seg ? seg.azimuth + '°' : '-'}</td>
                             <td className="px-4 py-2">{seg ? seg.dip : '-'}</td>
                             <td className="px-4 py-2 font-bold">{seg ? seg.distance + 'm' : '-'}</td>
                             
                             {/* Dims */}
-                            <td className="px-4 py-2 border-l border-stone-100">{seg ? seg.left : '-'}</td>
+                            <td className="px-4 py-2 border-l border-slate-100">{seg ? seg.left : '-'}</td>
                             <td className="px-4 py-2">{seg ? seg.right : '-'}</td>
                             <td className="px-4 py-2">{seg ? seg.up : '-'}</td>
                             <td className="px-4 py-2">{seg ? seg.down : '-'}</td>
                             
-                            <td className="px-4 py-2 border-l border-stone-100 italic text-stone-400 max-w-[150px] truncate">
+                            <td className="px-4 py-2 border-l border-slate-100 italic text-slate-400 max-w-[150px] truncate">
                               {st.notes}
                             </td>
                           </tr>
@@ -318,9 +317,9 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                       <th className="px-4 py-3">Notas</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-slate-100">
                     {structures.length === 0 ? (
-                       <tr><td colSpan={9} className="p-8 text-center text-stone-400 italic">No hay estructuras registradas</td></tr>
+                       <tr><td colSpan={9} className="p-8 text-center text-slate-400 italic">No hay estructuras registradas</td></tr>
                     ) : (
                       structures.map((str, i) => {
                         const st = stations.find(s => s.id === str.stationId);
@@ -329,12 +328,12 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                         return (
                           <tr key={str.id} className="hover:bg-amber-50/30">
                             <td className="px-4 py-2">
-                                <button onClick={() => editStructureParent(str)} className="text-stone-400 hover:text-amber-600 p-1">
+                                <button onClick={() => editStructureParent(str)} className="text-slate-400 hover:text-amber-600 p-1">
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
                             </td>
-                            <td className="px-4 py-2 font-bold text-stone-800">{st ? st.name : 'Desconocido'}</td>
-                            <td className="px-4 py-2 font-mono text-stone-600">{str.distanceFromStart} m</td>
+                            <td className="px-4 py-2 font-bold text-slate-800">{st ? st.name : 'Desconocido'}</td>
+                            <td className="px-4 py-2 font-mono text-slate-600">{str.distanceFromStart} m</td>
                             <td className="px-4 py-2 uppercase font-bold text-amber-700 bg-amber-50 inline-block m-1 rounded px-2 text-[10px]">
                               {str.type}
                               {str.otherType && <span className="normal-case text-amber-600">: {str.otherType}</span>}
@@ -342,8 +341,8 @@ const TableView: React.FC<TableViewProps> = ({ project, activeSubproject, onClos
                             <td className="px-4 py-2">{str.strike}°</td>
                             <td className="px-4 py-2">{str.dip}</td>
                             <td className="px-4 py-2">{str.aperture ? str.aperture + ' m' : '-'}</td>
-                            <td className="px-4 py-2 text-stone-500 text-[10px]">{locs}</td>
-                            <td className="px-4 py-2 italic text-stone-400 max-w-[200px] truncate">{str.notes}</td>
+                            <td className="px-4 py-2 text-slate-500 text-[10px]">{locs}</td>
+                            <td className="px-4 py-2 italic text-slate-400 max-w-[200px] truncate">{str.notes}</td>
                           </tr>
                         );
                       })
